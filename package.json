@@ -1,5 +1,5 @@
 {
-  "name": "pi-skills-workspace",
+  "name": "skills-workspace",
   "private": true,
   "workspaces": [
     "packages/*"

@@ -13,7 +13,7 @@ Each directory under `packages/` is a standalone npm package. Packages share the
 ## Repository structure
 
 ```text
-pi-skills/
+skills/
 ├── packages/
 │   └── codebase-lens/
 │       ├── package.json
