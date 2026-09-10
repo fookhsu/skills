@@ -1,0 +1,22 @@
+{
+  "name": "codebase-lens",
+  "version": "0.1.0",
+  "description": "A Pi skill for evidence-backed codebase orientation, flow tracing, impact analysis, vocabulary mapping, and onboarding documentation.",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "agent-skill",
+    "codebase",
+    "codebase-understanding",
+    "onboarding"
+  ],
+  "license": "MIT",
+  "files": [
+    "skills/"
+  ],
+  "pi": {
+    "skills": [
+      "./skills"
+    ]
+  }
+}
