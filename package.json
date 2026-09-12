@@ -27,7 +27,8 @@
     "packages/*"
   ],
   "scripts": {
-    "validate": "node scripts/validate-packages.mjs"
+    "validate": "node scripts/validate-packages.mjs",
+    "install-skill": "node scripts/install-skill.mjs"
   },
   "pi": {
     "skills": [

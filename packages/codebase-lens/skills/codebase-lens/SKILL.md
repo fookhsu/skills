@@ -1,6 +1,7 @@
 ---
 name: codebase-lens
-description: Evidence-backed codebase reading with a resumable investigation map, linked source symbols, separate domain concepts, architecture mapping, flow tracing, impact analysis, and an opt-in executable demo.
+description: Read unfamiliar codebases with evidence instead of guessing. Builds a resumable investigation map, traces behavior through modules, records domain concepts separately, analyzes change impact, and renders a self-contained HTML architecture and flow report with linked source symbols and bounded reading budgets. Use when the user asks to understand a repository, onboard onto a codebase, trace how a request, command, job, or page works, assess what a change could affect, or verify an architecture claim.
+license: MIT
 disable-model-invocation: true
 ---
 
@@ -32,7 +33,7 @@ Choose the smallest mode that answers the request. Modes may be combined in exec
 
 When no mode is named, infer `ORIENT` for a broad project request, `TRACE` for named behavior, and `IMPACT` for a change target. `DEMO` is an opt-in continuation and never replaces investigation.
 
-Arguments are a natural-language control contract appended to `/skill:codebase-lens`, not options parsed by a program. Honor these exact keys:
+Arguments are a natural-language control contract appended to the invocation — `/skill:codebase-lens` on Pi, `/codebase-lens` on Claude Code, `$codebase-lens` on Codex, or an ordinary request elsewhere — not options parsed by a program. Honor these exact keys:
 
 | Parameter | Values and default | Control |
 |---|---|---|

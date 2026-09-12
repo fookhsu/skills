@@ -30,6 +30,24 @@ pi install git:github.com/fookhsu/skills
 
 Add `-l` to write the install to project settings (`.pi/settings.json`) instead of user settings.
 
+### Other agents
+
+This is a standard `SKILL.md`, so it also runs on Claude Code, OpenAI Codex CLI, Cursor, Gemini CLI, GitHub Copilot, Cline, Windsurf, and OpenCode. Copy the skill directory into that agent's skills folder:
+
+```bash
+# Claude Code
+cp -r packages/codebase-lens/skills/codebase-lens ~/.claude/skills/
+
+# Codex CLI and other SKILL.md agents
+cp -r packages/codebase-lens/skills/codebase-lens ~/.agents/skills/
+```
+
+From this repository, the helper does the same and can symlink instead of copy:
+
+```bash
+node scripts/install-skill.mjs codebase-lens --agent claude
+```
+
 ## Invocation syntax
 
 You do not need to learn a parameter language. Invoke the skill and describe what you want in ordinary language, in whatever language you use:
