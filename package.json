@@ -1,7 +1,20 @@
 {
   "name": "skills-workspace",
   "private": true,
-  "description": "A monorepo of Pi skills, installed directly from GitHub.",
+  "description": "A monorepo of Pi agent skills, installable from GitHub or npm.",
+  "keywords": [
+    "pi",
+    "pi-package",
+    "pi-skill",
+    "agent-skill",
+    "ai-agent",
+    "ai-coding",
+    "coding-agent",
+    "codebase-understanding",
+    "codebase-analysis",
+    "code-reading",
+    "developer-tools"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/fookhsu/skills.git"

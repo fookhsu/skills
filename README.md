@@ -1,6 +1,8 @@
 # Pi Skills
 
-A monorepo of [Pi](https://pi.dev/) skills, available from GitHub and npm.
+A monorepo of [Pi](https://pi.dev/) agent skills, available from GitHub and npm. Packages here extend Pi with reusable, installable capabilities.
+
+The current package is **codebase-lens**, for reading unfamiliar codebases with evidence: it builds a resumable investigation map, traces behavior through modules, records domain concepts separately, analyzes change impact, and renders a self-contained HTML architecture and flow report with linked source symbols and bounded reading budgets.
 
 Each directory under `packages/` is a standalone skill package. Packages share one repository, validation script, and documentation conventions.
 
