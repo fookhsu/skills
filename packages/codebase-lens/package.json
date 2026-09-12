@@ -1,16 +1,27 @@
 {
   "name": "codebase-lens",
-  "version": "0.1.0",
-  "description": "A Pi skill for evidence-backed codebase orientation, flow tracing, impact analysis, vocabulary mapping, and onboarding documentation.",
+  "version": "0.3.0",
+  "description": "An evidence-backed Pi skill for codebase reading, standalone HTML architecture reports, impact analysis, and opt-in demos.",
   "keywords": [
     "pi-package",
     "pi",
     "agent-skill",
     "codebase",
     "codebase-understanding",
-    "onboarding"
+    "architecture",
+    "onboarding",
+    "prototype"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fookhsu/skills.git",
+    "directory": "packages/codebase-lens"
+  },
+  "homepage": "https://github.com/fookhsu/skills/tree/main/packages/codebase-lens#readme",
+  "bugs": {
+    "url": "https://github.com/fookhsu/skills/issues"
+  },
   "files": [
     "skills/"
   ],

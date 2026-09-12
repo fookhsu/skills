@@ -1,10 +1,24 @@
 {
   "name": "skills-workspace",
   "private": true,
+  "description": "A monorepo of Pi skills, installed directly from GitHub.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fookhsu/skills.git"
+  },
+  "homepage": "https://github.com/fookhsu/skills#readme",
+  "bugs": {
+    "url": "https://github.com/fookhsu/skills/issues"
+  },
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "validate": "node scripts/validate-packages.mjs"
+  },
+  "pi": {
+    "skills": [
+      "./packages/*/skills"
+    ]
   }
 }

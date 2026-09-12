@@ -1,14 +1,35 @@
 # Pi Skills
 
-A monorepo for independently published [Pi](https://pi.dev/) skills.
+A monorepo of [Pi](https://pi.dev/) skills, available from GitHub and npm.
 
-Each directory under `packages/` is a standalone npm package. Packages share the same repository, validation scripts, documentation conventions, and release workflow, while users can install each skill independently.
+Each directory under `packages/` is a standalone skill package. Packages share one repository, validation script, and documentation conventions.
+
+## Install
+
+Install every skill in this repository from GitHub:
+
+```bash
+pi install git:github.com/fookhsu/skills
+```
+
+Or install a single package from npm:
+
+```bash
+pi install npm:codebase-lens
+```
+
+Add `-l` to write the install to project settings (`.pi/settings.json`) instead of user settings. To remove an install later:
+
+```bash
+pi remove git:github.com/fookhsu/skills
+pi remove npm:codebase-lens
+```
 
 ## Packages
 
-| Package | Description | Install |
-|---|---|---|
-| [`codebase-lens`](./packages/codebase-lens) | Evidence-backed codebase orientation, flow tracing, impact analysis, vocabulary mapping, and onboarding documentation. | `pi install npm:codebase-lens` |
+| Package | Description | Install | Invoke |
+|---|---|---|---|
+| [`codebase-lens`](./packages/codebase-lens) | Evidence-backed codebase reading with standalone HTML architecture/flow reports, impact analysis, and opt-in executable demos. | `pi install npm:codebase-lens` or [GitHub](#install) | `/codebase-lens` |
 
 ## Repository structure
 
@@ -20,7 +41,8 @@ skills/
 │       ├── README.md
 │       └── skills/
 │           └── codebase-lens/
-│               └── SKILL.md
+│               ├── SKILL.md
+│               └── references/
 ├── scripts/
 │   └── validate-packages.mjs
 └── package.json
@@ -32,17 +54,6 @@ skills/
 npm run validate
 ```
 
-## Publish one package
-
-Publish from the package directory, or use npm workspaces from the repository root:
-
-```bash
-cd packages/codebase-lens
-npm publish --access public
-```
-
-Before publishing an update, increment the package version in its own `package.json` and run the validation script.
-
 ## Add a package
 
 1. Create `packages/<package-name>/`.
@@ -51,5 +62,7 @@ Before publishing an update, increment the package version in its own `package.j
 4. Add a package-specific `README.md`.
 5. Add the package to the table above.
 6. Run `npm run validate`.
+
+The root `package.json` declares `pi.skills` as `./packages/*/skills`, so GitHub installs pick up every package without editing the root manifest.
 
 See the [Pi package documentation](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/packages.md) for package manifests and resource discovery.
