@@ -1,20 +1,18 @@
 # codebase-lens
 
-An evidence-backed Pi skill for reading unfamiliar codebases and, when explicitly requested, validating one understanding or design with a bounded executable demo.
-
-`codebase-lens` follows behavior through modules instead of producing a speculative directory tour. Its reading framework combines behavior, module, data, change, and evidence lenses.
+An evidence-backed Pi skill for reading unfamiliar codebases with a resumable investigation map, bounded source slices, linked code symbols, a separate domain-concepts document, an HTML architecture/flow report, and an explicitly approved executable demo.
 
 ## What it does
 
-- Detects project scope, language, framework, entry points, and configured commands.
-- Traces a request, command, page, event, or job from registration to output and side effects.
-- Maps the fewest meaningful modules needed to explain the scope, using a consistent architecture vocabulary: interface, implementation, depth, seam, adapter, leverage, and locality.
-- Analyzes the likely blast radius of a file, symbol, diff, or feature.
-- Separates `SOURCE`, `RUNTIME`, `INFERRED`, `UNKNOWN`, and `CONTRADICTED` evidence.
-- Captures canonical project terms, aliases, overloaded names, and unresolved vocabulary.
-- Generates and opens a self-contained temporary HTML report by default, with response-only and approved durable-path alternatives.
-- Uses parallel read-only Pi subagents for broad investigations when available.
-- Offers—but never silently starts—an isolated demo or in-place patch to test one bounded hypothesis.
+- Records the current workflow stage, selected mode, and active reading lens.
+- Maintains a separate `investigation-map.md` with `READ`, `PARTIAL`, `UNREAD`, `QUEUED`, `SKIPPED`, and `STALE` coverage.
+- Reads large repositories incrementally using configurable file, line, slice, and stage bounds.
+- Treats source files over 1,000 lines as containers and reads bounded symbols or ranges instead of the whole file.
+- Maintains domain language separately in `domain-concepts.md`.
+- Links every named function, method, class, type, constant, handler, registration, and schema symbol to its verified source location.
+- Traces behavior, maps modules, analyzes impact, and independently verifies conclusions.
+- Generates a self-contained HTML report linked to the map and domain document.
+- Offers—but never silently starts—an isolated demo or in-place patch.
 
 ## Install
 
@@ -24,7 +22,7 @@ From npm:
 pi install npm:codebase-lens
 ```
 
-Or from GitHub (installs every skill in the repository):
+Or from GitHub, which installs every skill in this repository:
 
 ```bash
 pi install git:github.com/fookhsu/skills
@@ -32,64 +30,245 @@ pi install git:github.com/fookhsu/skills
 
 Add `-l` to write the install to project settings (`.pi/settings.json`) instead of user settings.
 
-## Use
+## Invocation syntax
 
-The skill is user-invoked so a repository-wide investigation does not start during ordinary coding work:
-
-```text
-/codebase-lens
-```
-
-Choose a mode explicitly, or let the skill infer the smallest one:
+The skill is user-invoked:
 
 ```text
-Use codebase-lens in ORIENT mode. Explain this repository and give me a reading path.
-
-Use codebase-lens in TRACE mode. Trace how an authenticated upload reaches storage.
-
-Use codebase-lens in IMPACT mode. What could change if I add a Run.status value?
-
-Use codebase-lens in VERIFY mode. Check whether this architecture explanation matches the code.
-
-Use codebase-lens to trace checkout, then propose an isolated DEMO of a smaller checkout interface.
+/skill:codebase-lens key=value key=value ...
 ```
 
-| Mode | Purpose |
-|---|---|
-| `ORIENT` | Build an architecture map and dependency-ordered reading path |
-| `TRACE` | Follow one behavior from entry to output and side effects |
-| `IMPACT` | Analyze the blast radius of a target change |
-| `VERIFY` | Confirm, contradict, or leave conclusions unresolved using independent evidence |
-| `DEMO` | Implement one explicitly approved executable tracer bullet |
+Arguments are appended to the skill as natural-language instructions; they are not parsed by a CLI program. Quotes are recommended for values containing spaces. The parameter names and values below are the complete supported control surface.
+
+## Complete parameter reference
+
+| Parameter | Accepted value | Default | Meaning |
+|---|---|---|---|
+| `mode` | `ORIENT`, `TRACE`, `IMPACT`, `VERIFY`, or a `+` combination such as `TRACE+VERIFY` | inferred | Investigation intent and execution order |
+| `scope` | repository-relative path, glob, package, or process | relevant package or repository root | Search boundary |
+| `target` | URL, command, page, event, job, file, symbol, feature, or diff | inferred from request | Concrete investigation subject |
+| `question` | one quoted question | framed from `target` | Primary stop question |
+| `revision` | commit, branch, tag, or diff range | current revision | Evidence baseline or impact range |
+| `workspace` | `temp`, `response-only`, or one explicitly approved directory | `temp` | Artifact lifetime and location |
+| `resume` | path to an existing `investigation-map.md` | none | Resume point; its parent directory overrides `workspace` |
+| `slice-files` | positive integer | `8` | Maximum candidate files per reading slice |
+| `slice-lines` | integer from `1` to `1000` | `400` | Maximum aggregate source lines in one reading slice |
+| `max-slices` | positive integer or `auto` | `3` | Maximum reading slices in the current invocation |
+| `stop-after` | `BASELINE`, `QUESTION`, `LANDMARKS`, `INVESTIGATE`, `MODULE_MAP`, `VERIFY`, or `REPORT` | `REPORT` | Workflow checkpoint at which to return control |
+| `include` | comma-separated paths or globs | none | Explicitly admitted source |
+| `exclude` | comma-separated paths or globs | generated, vendor, cache, and build-output defaults | Explicitly skipped source |
+| `open` | `true` or `false` | `true` | Whether to open the final HTML report |
+| `demo` | `skip`, `isolated`, or `in-place` | `skip` | Preferred demo disposition; never approval before the demo contract |
+
+Control precedence is: `resume` chooses the starting state and workspace; `scope` plus `include`/`exclude` set the boundary; `slice-files`/`slice-lines` bound each slice; `max-slices` is a hard invocation stop; `stop-after` stops at a genuinely completed stage; the demo approval gate is always last. When a repository cannot be completed within these bounds, the skill returns an incomplete but resumable map rather than hiding unread scope.
+
+## Modes
+
+| Mode | Primary lenses | Result |
+|---|---|---|
+| `ORIENT` | behavior, module, data, change, evidence | Architecture map and dependency-ordered reading path |
+| `TRACE` | behavior, data, evidence | Causal path from entry to output and side effects |
+| `IMPACT` | change, data, evidence | Evidence-backed blast radius and focused checks |
+| `VERIFY` | evidence plus an independent lens | Confirmations, contradictions, and unknowns |
+| `DEMO` | —; continuation after investigation | One explicitly approved executable tracer bullet |
+
+`mode` is the investigation intent. `lens` is the perspective currently applied. `stage` is the position in the workflow. All three appear in `investigation-map.md`.
+
+## Usage examples
+
+### 1. Let the skill infer the mode
+
+```text
+/skill:codebase-lens scope=. workspace=temp open=true
+```
+
+A broad repository request normally infers `ORIENT`.
+
+### 2. Orient a repository with explicit reading budgets
+
+```text
+/skill:codebase-lens mode=ORIENT scope=. question="How does the primary entry point reach central behavior and effects?" workspace=temp slice-files=8 slice-lines=400 max-slices=auto stop-after=REPORT open=true demo=skip
+```
+
+### 3. Orient one package in a monorepo
+
+```text
+/skill:codebase-lens mode=ORIENT scope=packages/payments target="payments package" workspace=temp slice-files=6 slice-lines=350 max-slices=4 stop-after=MODULE_MAP open=false
+```
+
+This intentionally stops before verification and reporting; the map records `MODULE_MAP` and the remaining frontier.
+
+### 4. Trace an HTTP request
+
+```text
+/skill:codebase-lens mode=TRACE scope=packages/api target="POST /orders" question="How does POST /orders reach a committed order?" workspace=temp slice-files=8 slice-lines=400 max-slices=5 stop-after=REPORT open=true
+```
+
+### 5. Trace a CLI command
+
+```text
+/skill:codebase-lens mode=TRACE scope=cmd target="orders import command" question="How are arguments parsed, validated, persisted, and reported?" workspace=temp slice-files=5 slice-lines=300 max-slices=4 stop-after=VERIFY open=false
+```
+
+### 6. Trace an event or background job
+
+```text
+/skill:codebase-lens mode=TRACE scope=packages/workers target="OrderPlaced consumer" question="What selects the consumer, what does it change, and how are retries handled?" include="packages/workers/**,packages/orders/**" exclude="**/fixtures/**" workspace=temp slice-files=7 slice-lines=400 max-slices=6 stop-after=REPORT open=true
+```
+
+### 7. Analyze a symbol's impact
+
+```text
+/skill:codebase-lens mode=IMPACT scope=packages/core target="Run.status" question="What changes if Run.status gains a value?" revision=HEAD workspace=temp slice-files=8 slice-lines=400 max-slices=auto stop-after=REPORT open=true
+```
+
+### 8. Analyze a branch or diff range
+
+```text
+/skill:codebase-lens mode=IMPACT scope=. target="status-model diff" revision=main..feature/run-status include="packages/**,migrations/**,config/**" exclude="dist/**,coverage/**" workspace=temp slice-files=10 slice-lines=500 max-slices=6 stop-after=REPORT open=true
+```
+
+### 9. Verify an existing architecture claim
+
+```text
+/skill:codebase-lens mode=VERIFY scope=packages/indexer target="The indexer writes only through SearchStore" question="Is every production write routed through SearchStore?" revision=HEAD workspace=temp slice-files=6 slice-lines=350 max-slices=4 stop-after=VERIFY open=false
+```
+
+### 10. Combine trace and independent verification
+
+```text
+/skill:codebase-lens mode=TRACE+VERIFY scope=packages/checkout target="authenticated checkout" question="How does authenticated checkout commit payment and order state, and is the path independently confirmed?" workspace=temp slice-files=8 slice-lines=400 max-slices=8 stop-after=REPORT open=true
+```
+
+### 11. Restrict a very large repository
+
+```text
+/skill:codebase-lens mode=ORIENT scope=. target="public API server" include="apps/api/**,packages/domain/**,packages/storage/**" exclude="**/generated/**,**/vendor/**,**/fixtures/**" workspace=temp slice-files=5 slice-lines=300 max-slices=3 stop-after=INVESTIGATE open=false
+```
+
+Only three slices are read. Other discovered areas remain explicit `UNREAD` rows.
+
+### 12. Read a source file larger than 1,000 lines safely
+
+```text
+/skill:codebase-lens mode=TRACE scope=src target="src/legacy-controller.ts#submitOrder" question="What does submitOrder validate and call?" workspace=temp slice-files=2 slice-lines=250 max-slices=3 stop-after=VERIFY open=false
+```
+
+The skill indexes declarations first, reads the target function and required neighboring symbols in bounded ranges, marks those symbols `READ`, and leaves the containing file `PARTIAL`.
+
+### 13. Stop after landmarks
+
+```text
+/skill:codebase-lens mode=ORIENT scope=. target="server entry points" workspace=.codebase-lens/server-map slice-files=8 slice-lines=400 max-slices=1 stop-after=LANDMARKS open=false
+```
+
+Naming `.codebase-lens/server-map` explicitly approves writing investigation artifacts there, but does not approve source edits.
+
+### 14. Resume the previous investigation
+
+```text
+/skill:codebase-lens resume=.codebase-lens/server-map/investigation-map.md max-slices=3 stop-after=INVESTIGATE open=false demo=skip
+```
+
+The saved scope, revision, mode, lens, and coverage are recovered from the map. Changed evidence is marked `STALE`.
+
+### 15. Resume and continue through the report
+
+```text
+/skill:codebase-lens resume=.codebase-lens/server-map/investigation-map.md max-slices=auto stop-after=REPORT open=true
+```
+
+### 16. Create a durable artifact workspace
+
+```text
+/skill:codebase-lens mode=TRACE scope=packages/orders target="POST /orders" workspace=.codebase-lens/orders revision=HEAD slice-files=8 slice-lines=400 max-slices=auto stop-after=REPORT open=true
+```
+
+The workspace contains:
+
+```text
+.codebase-lens/orders/
+├── investigation-map.md
+├── domain-concepts.md
+└── report.html
+```
+
+Consider adding `.codebase-lens/` to `.gitignore` when these are local working artifacts.
+
+### 17. Produce no files
+
+```text
+/skill:codebase-lens mode=VERIFY scope=packages/auth target="authorization claim" workspace=response-only slice-files=4 slice-lines=300 max-slices=2 stop-after=VERIFY open=false
+```
+
+The response includes compact position, coverage, domain terms, direct findings, and next frontier, but cannot be resumed from disk.
+
+### 18. Generate artifacts without opening the browser
+
+```text
+/skill:codebase-lens mode=IMPACT scope=packages/schema target="Order.version" revision=main..HEAD workspace=temp slice-files=8 slice-lines=400 max-slices=5 stop-after=REPORT open=false
+```
+
+### 19. Request an isolated demo preference
+
+```text
+/skill:codebase-lens mode=TRACE+VERIFY scope=packages/checkout target="checkout orchestration" workspace=temp slice-files=8 slice-lines=400 max-slices=6 stop-after=REPORT open=true demo=isolated
+```
+
+`demo=isolated` records the preferred disposition. The skill still presents a demo contract and waits for explicit approval before editing source.
+
+### 20. Request an in-place demo preference
+
+```text
+/skill:codebase-lens mode=VERIFY scope=packages/indexer target="smaller indexing interface" workspace=.codebase-lens/indexer slice-files=6 slice-lines=350 max-slices=5 stop-after=REPORT open=true demo=in-place
+```
+
+An in-place patch begins only after the proposed behavior, seam, file set, verification command, non-goals, and location are visible and explicitly approved.
+
+## Artifact workspace
+
+Default file-producing runs create:
+
+```text
+<os-temp-dir>/codebase-lens-<repo>-<mode>-<timestamp>-<random>/
+├── investigation-map.md
+├── domain-concepts.md
+└── report.html
+```
+
+### `investigation-map.md`
+
+The map is the resumable control plane. It records:
+
+- repository, revision, worktree, scope, and primary question;
+- current workflow stage, selected mode, and active lens;
+- reading budgets and stop controls;
+- bounded next-slice frontier;
+- adaptive source coverage using `READ`, `PARTIAL`, `UNREAD`, `QUEUED`, `READING`, `SKIPPED`, and `STALE`;
+- conclusions, blockers, unknowns, and the next action.
+
+It remains below 1,000 lines by collapsing completed children into parent summaries while keeping unresolved and unread coverage explicit.
+
+### `domain-concepts.md`
+
+Domain terminology is not stored in the map. The separate document records canonical terms, aliases and code names, meanings and limits, lifecycles and relationships, status, and linked evidence. If it approaches 1,000 lines, it becomes an index and shards by bounded context or subsystem.
+
+### `report.html`
+
+The report summarizes the answer and links to both Markdown artifacts. Visuals are selected by mode:
+
+- fixed tracks for `ORIENT` architecture;
+- an ordered rail for `TRACE` execution flow;
+- `DIRECT`, `INDIRECT`, `VALIDATE`, and `NO EVIDENCE` bands for `IMPACT`;
+- contradiction-first verdict rows for `VERIFY`.
+
+Every named source symbol is a clickable link pinned to the investigated revision when the repository host supports it. A verified local-file link with visible path and line range is used otherwise.
 
 ## Optional demo safety
 
-Reading starts source-read-only. Before a demo edits code, the skill presents a contract with the hypothesis, observable behavior, proposed interface and seam, expected files, verification command, and non-goals. The user then chooses:
+Reading starts source-read-only. Before a demo edits code, the skill presents a contract with the hypothesis, observable behavior, proposed module interface and seam, expected files, verification command, and non-goals. The user then explicitly chooses `isolated`, `in-place`, or `skip`.
 
-- **isolated demo** — preferred for throwaway experiments;
-- **in-place patch** — a reviewable project change;
-- **skip** — keep the codebase map without implementation.
-
-The demo is intentionally not production completion. Its result states what the experiment establishes, what remains unknown, all changed files, commands run, and whether to integrate, iterate, keep separate, or discard it.
-
-## Generated HTML report
-
-By default, every completed investigation securely creates a fresh report outside the project:
-
-```text
-<os-temp-dir>/codebase-lens-<repo>-<mode>-<timestamp>-<random>.html
-```
-
-The skill opens the report and returns its absolute path. Alternatively, the user can request response-only output, which creates no file, or approve one durable path, which creates only that file. The report is standalone and works offline: HTML5, inline CSS, semantic tables, and stable CSS/SVG visuals with no Mermaid, CDN, or build step.
-
-Visuals are selected by mode:
-
-- fixed tracks for architecture;
-- an ordered rail for execution flow;
-- four evidence bands for impact analysis;
-- contradiction-first verdict rows for verification.
-
-Complex or cyclic relationships are represented in the evidence table instead of forcing crossing diagram lines. A report is written inside the repository only when the user requests a durable artifact and approves its path.
+The demo is evidence, not production completion. Its result states what the experiment establishes, what remains unknown, all changed files, commands run, and whether to integrate, iterate, keep separate, or discard it.
 
 ## Package contents
 
@@ -100,12 +279,14 @@ skills/codebase-lens/
     ├── ARCHITECTURE.md
     ├── CODE-READING.md
     ├── DEMO.md
-    └── HTML-REPORT.md
+    ├── DOMAIN-CONCEPTS.md
+    ├── HTML-REPORT.md
+    └── INVESTIGATION-MAP.md
 ```
 
 ## Safety
 
-Pi packages run with full system access. This package contains instructions for inspecting repositories, writing a temporary HTML report, opening it locally, and—only after explicit approval—implementing a bounded demo. Review the skill before using it in sensitive repositories.
+Pi packages run with full system access. This package contains instructions for inspecting repositories, writing investigation artifacts, opening a local HTML report, and—only after explicit approval—implementing a bounded demo. Review the skill before using it in sensitive repositories.
 
 ## License
 

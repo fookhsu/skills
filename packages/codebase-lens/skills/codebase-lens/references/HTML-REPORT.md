@@ -1,35 +1,40 @@
-# HTML report
+# Artifact workspace and HTML report
 
-Render a completed investigation as a self-contained HTML file unless the user chose response-only output. HTML is the primary artifact when a file is produced; chat receives the direct answer, important unknowns, and its absolute path.
+A file-producing investigation uses one workspace containing a resumable investigation map, a separate domain-concepts document, and the final self-contained HTML report. Chat receives the direct answer, important unknowns, coverage summary, and absolute paths to every produced artifact.
 
 ## Output decision
 
 Choose exactly one branch:
 
-| Request | File behavior | Open behavior |
+| `workspace` value | File behavior | Resume and open behavior |
 |---|---|---|
-| Default | Securely create one fresh file in the OS temp directory | Attempt to open it |
-| Response-only | Write no report file | Open nothing; return the concise findings in chat |
-| Approved durable path | Write only to that exact path | Attempt to open it unless the user says not to |
+| `temp` (default) | Securely create one fresh OS-temporary directory containing `investigation-map.md`, `domain-concepts.md`, and eventually `report.html` | Resumable while the directory exists; open `report.html` unless `open=false` |
+| `response-only` | Write no files | Not resumable from disk; return compact position, coverage, domain terms, and findings in chat |
+| Approved directory | Create or resume artifacts only in that exact directory | Durable and resumable; open `report.html` unless `open=false` |
 
-A durable report is a project-file edit: show the path and obtain approval before writing it. Do not also create a temp copy unless the user requests both.
+A durable workspace inside the investigated repository is a project-file edit: show the directory and obtain approval before writing it. Approval covers investigation artifacts only, not source edits. Do not also create a temporary copy unless the user requests both. A `resume=<map-path>` selects the existing map's parent directory and takes precedence over `workspace`.
 
-For the default branch, use the operating system or standard-library temporary-file facility with exclusive creation and a random suffix. A descriptive prefix is useful, but it is not the uniqueness mechanism:
+For the default branch, use the operating system or standard-library temporary-directory facility with a random suffix and exclusive file creation:
 
 ```text
-<tmpdir>/codebase-lens-<repo>-<mode>-<timestamp>-<random>.html
+<tmpdir>/codebase-lens-<repo>-<mode>-<timestamp>-<random>/
+├── investigation-map.md
+├── domain-concepts.md
+└── report.html
 ```
 
-Sanitize `<repo>` and `<mode>` to lowercase ASCII letters, numbers, and hyphens. A suitable implementation uses Node `fs.open(..., "wx")`, Python `tempfile`, or an equivalent OS-backed primitive; retry collisions instead of overwriting.
+Sanitize `<repo>` and `<mode>` to lowercase ASCII letters, numbers, and hyphens. A suitable implementation uses Node `fs.mkdtemp`, Python `tempfile.mkdtemp`, or an equivalent OS-backed primitive. Create files without overwriting an unrelated artifact; on resume, verify the map's repository and revision before updating it.
 
-Open the result by passing the absolute path as one argument to the operating system launcher: `open` on macOS, `xdg-open` on Linux, or `start`/`Start-Process` on Windows. Use an argument array such as Node `spawn(command, [path])` or Python `subprocess.run([command, path])`; never build a shell command by concatenating the path. If opening fails, keep the report and state the failure with its absolute path.
+Use relative links among the three artifacts so moving a durable workspace preserves navigation. Open only the report, passing its absolute path as one argument to `open` on macOS, `xdg-open` on Linux, or `start`/`Start-Process` on Windows. Use an argument array such as Node `spawn(command, [path])` or Python `subprocess.run([command, path])`; never concatenate a shell command. If opening fails, keep every artifact and state the failure with their absolute paths.
 
 ## Rendering contract
 
 - Produce valid standalone HTML5 with UTF-8, viewport metadata, inline CSS, and no build step.
 - Use semantic HTML, CSS Grid/Flexbox, and inline SVG only when a freeform connector is necessary.
 - Do not use Markdown diagrams, Mermaid, Tailwind, web fonts, or CDN assets. The file must work offline.
-- Context-escape every non-template value before inserting it into HTML, including user input, repository content, paths, command output, labels, and generated prose. Escape text nodes and quoted attributes separately; at minimum text must encode `&`, `<`, and `>`, while attributes must also encode the active quote character. Never interpolate dynamic raw HTML or place dynamic values in `<style>`, `<script>`, URL-valued attributes, or event-handler attributes.
+- Context-escape every non-template value before inserting it into HTML, including user input, repository content, paths, command output, labels, generated prose, and source-link attributes. Escape text nodes and quoted attributes separately; at minimum text must encode `&`, `<`, and `>`, while attributes must also encode the active quote character. Never interpolate dynamic raw HTML or place dynamic values in `<style>`, `<script>`, URL-valued attributes, or event-handler attributes.
+- Follow the source-link contract in [CODE-READING.md](CODE-READING.md). Every named source symbol is a clickable, verified link with visible repository-relative path and line range; artifact-to-artifact links are relative.
+- Keep each generated file below 1,000 physical lines without minifying or collapsing readable structure to evade the limit. Compact the report and move full coverage or terminology into their dedicated artifacts; shard domain concepts as specified by [DOMAIN-CONCEPTS.md](DOMAIN-CONCEPTS.md).
 - Include no executable JavaScript unless the user explicitly requests interaction. Prefer `<details>` for disclosure.
 - Keep the report readable at 360px and at desktop widths. Tables use horizontal overflow containers; long paths wrap with `overflow-wrap:anywhere`.
 - Use color as a secondary signal. Every status also has visible text.
@@ -67,7 +72,7 @@ Render a causal flow as an `<ol>`. Each node gets a fixed sequence number, conci
 <ol class="flow" aria-label="Request flow">
   <li class="flow-step source">
     <span class="step-number">1</span>
-    <div><strong>Route registration</strong><code>src/http.ts:register</code></div>
+    <div><strong>Route registration</strong><a href="REVISION_PINNED_SOURCE_URL"><code>src/http.ts:12-28 · register</code></a></div>
   </li>
   <li class="flow-step inferred">...</li>
 </ol>
@@ -105,16 +110,17 @@ If two edges would cross or a label would overlap, use the fixed-track architect
 
 Include only sections useful to the selected mode, in this order:
 
-1. **Header** — repository, scope, revision, mode, generated time, worktree status.
+1. **Header** — repository, scope, revision, current stage, selected modes, active lens, controls, generated time, and worktree status.
 2. **Direct answer** — one compact statement that answers the reading question.
-3. **Primary visual** — architecture tracks for `ORIENT`, ordered rail for `TRACE`, impact bands for `IMPACT`, verdict rows for `VERIFY`.
-4. **Relationship evidence** — source module, relationship, target module, paths/symbols, evidence status.
-5. **Module details** — responsibility, interface, hidden implementation, seam, adapters, dependencies.
-6. **Vocabulary** — canonical term, aliases, meaning and limits, status, evidence.
-7. **Reading path or checks** — dependency-ordered paths for `ORIENT`; relevant checks for focused modes.
-8. **Unknowns** — unresolved facts and the next highest-value check.
+3. **Workflow and coverage** — stage/mode/lens position; `READ`, `PARTIAL`, `UNREAD`, `SKIPPED`, and `STALE` totals at the map's current granularity; next frontier; link to `investigation-map.md`.
+4. **Primary visual** — architecture tracks for `ORIENT`, ordered rail for `TRACE`, impact bands for `IMPACT`, verdict rows for `VERIFY`.
+5. **Relationship evidence** — source module, relationship, target module, linked paths/symbols, evidence status.
+6. **Module details** — responsibility, interface, hidden implementation, seam, adapters, dependencies, and linked source symbols.
+7. **Domain concepts summary** — only terms required for the answer plus a link to `domain-concepts.md`; keep full definitions in that document.
+8. **Reading path or checks** — dependency-ordered paths for `ORIENT`; relevant checks for focused modes.
+9. **Unknowns and frontier** — unresolved facts, deliberately unread scope, and the next highest-value slice.
 
-The visual carries structure; the evidence table carries precision. Do not duplicate full prose across both.
+The visual carries structure; the evidence table carries precision; the map carries coverage; the domain document carries terminology. Do not duplicate full prose across them.
 
 ## Minimal scaffold
 
@@ -186,9 +192,11 @@ The visual carries structure; the evidence table carries precision. Do not dupli
   <main>
     <header>...</header>
     <section id="answer">...</section>
+    <section id="workflow-coverage">...</section>
     <section id="primary-visual">...</section>
     <section id="evidence">...</section>
-    <section id="unknowns">...</section>
+    <section id="domain-summary">...</section>
+    <section id="unknowns-frontier">...</section>
   </main>
 </body>
 </html>
@@ -200,16 +208,20 @@ Extend the CSS only for information required by the report. Keep cards at 8px ra
 
 Before opening the report:
 
-- confirm the file exists, is non-empty, and was created exclusively rather than overwriting another report;
+- confirm `investigation-map.md`, `domain-concepts.md`, and `report.html` exist and are non-empty for a file-producing investigation;
+- confirm each generated file is below 1,000 physical lines;
+- confirm the map and domain document link to each other, and the report links to both with relative paths;
 - check that `<!doctype html>`, `<meta charset>`, viewport metadata, `<title>`, and closing `</html>` exist;
+- confirm the header and coverage section agree with the map's current stage, mode, lens, revision, and coverage totals;
 - confirm a three-track architecture has three sections and two arrows with `tracks-3`, or a four-track architecture has four sections and three arrows with `tracks-4`;
 - scan for unescaped dynamic values and accidental Markdown fences;
+- confirm every named source symbol is a link with a visible path and line range, and sample links against the recorded revision;
 - confirm every material relationship in the primary visual appears in the evidence table;
-- confirm evidence and verdict colors also have text labels;
-- confirm no section is empty merely because it is in the scaffold.
+- confirm evidence, coverage, and verdict colors also have text labels;
+- confirm the full glossary is not duplicated in the report and no section is empty merely because it is in the scaffold.
 
 When browser automation is available, inspect one desktop and one narrow viewport for overflow and overlap. Otherwise open the file normally and state that automated visual verification was unavailable only when that limitation matters.
 
 ## Completion
 
-A file report is complete when it opens successfully or has a reported open failure, answers the selected question, contains a stable mode-appropriate visual, preserves evidence statuses in text, works without network access, and its absolute path is returned to the user. Response-only output is complete when no file was created and the concise chat findings answer the selected question.
+A file-producing investigation is complete for the current stop point when all three artifacts satisfy their contracts, the report opens successfully or has a reported open failure, the map contains an honest resumable frontier or terminal state, and every absolute artifact path is returned. Response-only output is complete when no files were created and the concise chat findings include the current stage, mode, lens, coverage, domain terms, direct answer, and next frontier.

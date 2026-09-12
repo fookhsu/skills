@@ -32,7 +32,7 @@ For each module, record:
 4. **Seam** — where behavior can vary.
 5. **Adapters** — concrete production and test participants at the seam.
 6. **Dependencies/dependents** — modules it uses and modules that use it.
-7. **Evidence** — paths, symbols, registration, tests, or runtime observations.
+7. **Evidence** — paths, symbols, registration, tests, or runtime observations. In generated artifacts, link every named source symbol under [CODE-READING.md](CODE-READING.md).
 
 Depth is a property of the interface, not a line-count ratio. A large implementation can still be shallow, and a small implementation can offer high leverage.
 

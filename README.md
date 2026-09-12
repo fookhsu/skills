@@ -29,7 +29,7 @@ pi remove npm:codebase-lens
 
 | Package | Description | Install | Invoke |
 |---|---|---|---|
-| [`codebase-lens`](./packages/codebase-lens) | Evidence-backed codebase reading with standalone HTML architecture/flow reports, impact analysis, and opt-in executable demos. | `pi install npm:codebase-lens` or [GitHub](#install) | `/codebase-lens` |
+| [`codebase-lens`](./packages/codebase-lens) | Resumable, evidence-backed codebase reading with read/unread maps, separate domain concepts, linked source symbols, bounded slices, HTML reports, impact analysis, and opt-in demos. | `pi install npm:codebase-lens` or [GitHub](#install) | `/skill:codebase-lens` |
 
 ## Repository structure
 

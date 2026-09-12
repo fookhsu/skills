@@ -1,148 +1,181 @@
 ---
 name: codebase-lens
-description: Evidence-backed codebase reading framework with architecture mapping, flow tracing, impact analysis, and an opt-in executable demo.
+description: Evidence-backed codebase reading with a resumable investigation map, linked source symbols, separate domain concepts, architecture mapping, flow tracing, impact analysis, and an opt-in executable demo.
 disable-model-invocation: true
 ---
 
 # Codebase Lens
 
-Read an unfamiliar codebase by following behavior through modules. Build a verifiable mental model rather than a confident directory tour.
+Read an unfamiliar codebase by following behavior through modules. Build a verifiable, resumable mental model rather than a confident directory tour.
 
-The investigation arc is:
+The investigation arc is iterative:
 
 ```text
-scope → landmarks → concrete flow → module map → independent verification → HTML report → optional demo
+baseline → question → landmarks
+         → [select slice → investigate through active mode/lens → update maps]*
+         → module map → independent verification → HTML report → optional demo
 ```
 
-## Invocation
+The arc is the workflow position. A mode is the user's investigative intent. A lens is the perspective currently applied inside a stage. Record all three in `investigation-map.md` so a user can see and control the current position.
 
-Choose the smallest mode that answers the request. Modes may be combined.
+## Invocation and control
 
-| Mode | Question | Result |
+Choose the smallest mode that answers the request. Modes may be combined in execution order.
+
+| Mode | Primary lenses | Question | Result |
+|---|---|---|---|
+| `ORIENT` | behavior, module, data, change, evidence | What is this project, and where should I start? | Architecture map and dependency-ordered reading path |
+| `TRACE` | behavior, data, evidence | How does this request, command, page, event, or job work? | Causal path from entry to output and side effects |
+| `IMPACT` | change, data, evidence | What could this file, symbol, diff, or feature affect? | Evidence-backed blast radius and checks |
+| `VERIFY` | evidence plus an independent lens | Is this understanding correct? | Confirmations, contradictions, and unknowns |
+| `DEMO` | —; continuation after investigation | Would this interpretation or design work in code? | Explicitly approved, bounded executable demo |
+
+When no mode is named, infer `ORIENT` for a broad project request, `TRACE` for named behavior, and `IMPACT` for a change target. `DEMO` is an opt-in continuation and never replaces investigation.
+
+Arguments are a natural-language control contract appended to `/skill:codebase-lens`, not options parsed by a program. Honor these exact keys:
+
+| Parameter | Values and default | Control |
 |---|---|---|
-| `ORIENT` | What is this project, and where should I start? | Architecture map and dependency-ordered reading path |
-| `TRACE` | How does this request, command, page, event, or job work? | Causal path from entry to output and side effects |
-| `IMPACT` | What could this file, symbol, diff, or feature affect? | Evidence-backed blast radius and checks |
-| `VERIFY` | Is this understanding correct? | Independent confirmations, contradictions, and unknowns |
-| `DEMO` | Would this interpretation or design work in code? | Explicitly approved, bounded executable demo |
+| `mode` | `ORIENT`, `TRACE`, `IMPACT`, `VERIFY`, a `+` combination; inferred by default | Investigation intent and mode order |
+| `scope` | repository-relative path, glob, package, or process; relevant package by default | Search boundary |
+| `target` | URL, command, page, event, job, file, symbol, feature, or diff; inferred from request | Concrete subject |
+| `question` | one quoted question; framed from target by default | Primary stop question |
+| `revision` | commit, branch, tag, or diff range; current revision by default | Evidence baseline |
+| `workspace` | `temp`, `response-only`, or one approved directory; `temp` by default | Artifact lifetime and location |
+| `resume` | path to an existing `investigation-map.md`; none by default | Resume point; its workspace wins over `workspace` |
+| `slice-files` | positive integer; `8` by default | Maximum candidate files in one reading slice |
+| `slice-lines` | integer from `1` to `1000`; `400` by default | Maximum aggregate source lines in one reading slice |
+| `max-slices` | positive integer or `auto`; `3` by default | Invocation-level reading bound |
+| `stop-after` | `BASELINE`, `QUESTION`, `LANDMARKS`, `INVESTIGATE`, `MODULE_MAP`, `VERIFY`, or `REPORT`; `REPORT` by default | Requested workflow checkpoint |
+| `include` | comma-separated paths or globs; none by default | Explicitly admitted source |
+| `exclude` | comma-separated paths or globs; generated/vendor/build defaults still apply | Explicitly skipped source |
+| `open` | `true` or `false`; `true` by default for HTML | Whether to open the final report |
+| `demo` | `skip`, `isolated`, or `in-place`; `skip` until the demo contract is approved | Preferred demo disposition, not pre-approval |
 
-When no mode is named, infer `ORIENT` for a broad project request, `TRACE` for named behavior, and `IMPACT` for a change target. `DEMO` is an opt-in continuation: it does not replace investigation.
+`include` and `exclude` first constrain `scope`; slice budgets then bound each reading unit. `max-slices` is a hard invocation stop: when reached before `stop-after`, update the map and return progress without pretending the later stage completed. `resume` controls the starting position, and the demo approval gate always remains last.
 
-Before reconnaissance, read [references/CODE-READING.md](references/CODE-READING.md). Before drawing or evaluating the module map, read [references/ARCHITECTURE.md](references/ARCHITECTURE.md). Before rendering the result, read [references/HTML-REPORT.md](references/HTML-REPORT.md). Read [references/DEMO.md](references/DEMO.md) only after the user requests or accepts a demo.
+Read [references/INVESTIGATION-MAP.md](references/INVESTIGATION-MAP.md) and [references/CODE-READING.md](references/CODE-READING.md) before reconnaissance. Read [references/DOMAIN-CONCEPTS.md](references/DOMAIN-CONCEPTS.md) before recording project terminology. Read [references/ARCHITECTURE.md](references/ARCHITECTURE.md) before drawing or evaluating modules. Read [references/HTML-REPORT.md](references/HTML-REPORT.md) before choosing an artifact workspace or rendering a report. Read [references/DEMO.md](references/DEMO.md) only after the user requests or accepts a demo proposal.
+
+## Artifacts
+
+A file-producing investigation uses one artifact workspace with separate responsibilities:
+
+```text
+<artifact-workspace>/
+├── investigation-map.md  # stage, mode, lens, read/unread coverage, frontier
+├── domain-concepts.md    # canonical domain language and linked evidence
+└── report.html           # final human-facing answer
+```
+
+The investigation map is authoritative for workflow position and coverage. The domain-concepts document is authoritative for terminology. The report summarizes and links both; it does not duplicate either document.
+
+Every named source symbol in generated artifacts must be a clickable, revision-pinned source link when the repository host supports it, with a verified local-file fallback. No generated file may exceed 1,000 physical lines. Follow the compaction and sharding rules in the references.
 
 ## Operating contract
 
-- Begin read-only. Preserve existing user changes.
-- Record the repository root, revision, and worktree state before drawing conclusions.
+- Begin source-read-only and preserve existing user changes.
+- Record repository root, revision, worktree state, scope, selected modes, and budgets before drawing conclusions.
 - Read project instructions, `CONTEXT.md`, and relevant ADRs before choosing terminology or suggesting a different seam.
 - Inspect configuration and actual registration sites before broad source directories.
-- Treat names and directory conventions as search hints, not evidence.
-- A static import or call graph is not runtime behavior.
-- Keep scope proportional. Establish the relevant package or executable before exploring a large monorepo.
-- Choose one output: default temporary HTML, response-only with no file, or one user-approved durable HTML path. It does not otherwise edit project files or source code.
-- Source edits require the demo gate in [references/DEMO.md](references/DEMO.md). An invitation to build a demo is not approval.
+- Treat names and directory conventions as search hints, not evidence. A static import or call graph is not runtime behavior.
+- Use adaptive coverage rather than enumerating a large repository file by file. Coarse unread rows remain explicit.
+- A source file over 1,000 lines is a container: index it, then read bounded symbols or ranges. Never mark the whole file `READ` after inspecting only selected functions.
+- Choose one output branch: default temporary artifact workspace, response-only with no files, or one user-approved durable workspace. Writing durable investigation artifacts is not approval to edit project source.
+- Source edits require the demo gate in [references/DEMO.md](references/DEMO.md). An invitation or `demo` preference is not approval.
 - Respond and write artifacts in the user's language unless the project has a documented language convention.
 
 ## Workflow
 
-### 1. Establish the baseline
+### 1. Establish or resume the baseline
 
-Identify the repository root, current revision, uncommitted changes, project instructions, requested scope, and selected modes. Detect whether the repository is a monorepo and narrow to the relevant package when possible.
+Identify the repository root, revision, worktree state, requested scope, selected modes, control parameters, and monorepo boundary. Choose the artifact branch under [references/HTML-REPORT.md](references/HTML-REPORT.md).
 
-**Complete when:** the exact scope, revision, mode, and pre-existing changes are recorded.
+For a new file-producing investigation, create `investigation-map.md` and `domain-concepts.md` before reading source. For `resume`, read the existing map first, verify repository and revision, preserve valid coverage, and mark changed evidence `STALE`.
 
-### 2. Frame one reading question
+Set the map stage to `BASELINE` and active lens to `evidence`.
 
-Turn the request into one primary question. Examples:
+**Complete when:** the exact baseline, controls, artifact paths, and pre-existing changes are recorded; the map points to the domain document; and the next stage is `QUESTION` or an explicit stop condition.
 
-- “Which modules participate between `POST /orders` and the committed order?”
-- “What must a caller know to use the indexing module correctly?”
-- “What changes if `Run.status` gains a value?”
+### 2. Frame one reading question and domain language
 
-For broad `ORIENT`, use: “How does the primary entry point reach the project's central behavior and effects?”
+Turn the request into one primary question. For broad `ORIENT`, use: “How does the primary entry point reach the project's central behavior and effects?” For behavior modes name the entry candidate and expected output or effect.
 
-Read existing domain language first. Record new terms as `CONFIRMED`, `CANDIDATE`, `AMBIGUOUS`, or `CONTRADICTED`; do not promote an identifier into a domain concept without evidence.
+Read existing domain language first. Update only the separate domain-concepts document. Record terms as `CONFIRMED`, `CANDIDATE`, `AMBIGUOUS`, or `CONTRADICTED`; do not promote an identifier into a domain concept without evidence. Link every named code symbol.
 
-**Complete when:** the report names the question and target; for behavior modes it also names the entry candidate and expected output or effect; important vocabulary uncertainties are explicit.
+Set the map stage to `QUESTION` and record the mode and active lens.
 
-### 3. Run the selected investigation
+**Complete when:** the map names one question and target, important vocabulary uncertainties are explicit in the domain document, and the next landmark search is queued or `stop-after=QUESTION` is recorded.
 
-Use manifests, startup configuration, registration, schemas, adapters, tests, and targeted source searches to choose the smallest useful file set. Follow the mode-specific completion rules in [references/CODE-READING.md](references/CODE-READING.md):
+### 3. Find landmarks and plan the frontier
 
-- `ORIENT`: reconnoiter broadly enough to find the primary entry, then trace one representative behavior before generalizing.
+Use project instructions, manifests, startup configuration, registrations, public interfaces, schemas, adapters, and nearest tests to identify the smallest useful source area. Inventory large scopes at package or directory granularity rather than listing every file.
+
+Set the map stage to `LANDMARKS`. Add discovered in-scope units as `UNREAD`, promote only the next highest-value units to `QUEUED`, and plan one slice within `slice-files` and `slice-lines`. Measure candidate files; index files over 1,000 lines by declarations or symbols before selecting ranges.
+
+**Complete when:** each landmark is linked or explicitly unresolved, the frontier identifies why every queued unit is next, untouched scope remains visible as coarse `UNREAD` coverage, and the first slice is bounded or `stop-after=LANDMARKS` is recorded.
+
+### 4. Investigate in bounded slices
+
+Set the map stage to `INVESTIGATE`; record the selected mode and current lens. Follow the mode-specific rules in [references/CODE-READING.md](references/CODE-READING.md):
+
+- `ORIENT`: find the primary entry, then trace one representative behavior before generalizing.
 - `TRACE`: follow only the named behavior in causal order, including relevant validation, state, effects, errors, retries, and output.
-- `IMPACT`: walk from the target toward callers and effects; do not add a general startup trace unless it establishes a claimed impact.
-- `VERIFY`: state the claims under test, then seek independent confirming or contradicting evidence; do not orient the whole repository unless scope is itself disputed.
+- `IMPACT`: walk from the target toward callers and effects; add startup tracing only when it establishes a claimed impact.
+- `VERIFY`: state claims under test, then seek independent confirming or contradicting evidence.
 
-Attach an evidence status to every material conclusion using [references/CODE-READING.md](references/CODE-READING.md).
+For every slice, mark selected units `READING`, inspect only the bounded units, update exact symbol/range coverage to `READ`, leave containers `PARTIAL` when content remains, update domain concepts, and queue newly discovered edges for a later slice. Attach an evidence status to every material conclusion.
 
-**Complete when:** the selected mode's required relationships have paths, symbols, roles, and evidence statuses, or are explicitly unresolved.
+Repeat only while the question needs evidence and the `max-slices` and `stop-after` controls allow it. When the hard slice limit is reached before the requested stage, stop this invocation, persist the map and domain document, and return progress without advancing to later stages. Never hide an incomplete investigation: leave a resumable frontier.
 
-### 4. Map only the relevant modules
+**Complete when:** the selected mode's required relationships have linked paths, symbols, roles, and evidence statuses or are explicitly unresolved, or the hard invocation bound has been reached; exact read/unread coverage is current; and the map identifies the next slice or the reason investigation stopped.
 
-Use the scale rule in [references/ARCHITECTURE.md](references/ARCHITECTURE.md). `ORIENT` gets a compact system map; `TRACE` maps the modules on the path; `IMPACT` and `VERIFY` name only modules needed to explain the findings. For each included module record its responsibility, interface, hidden implementation, seam, adapters, dependencies, key paths and symbols, and evidence.
+### 5. Map only relevant modules
 
-Describe the current architecture before evaluating it. Mark a module shallow only when caller knowledge or orchestration visibly leaks across its seam. Respect ADRs; surface a conflict instead of silently re-litigating it.
+Use the scale rule in [references/ARCHITECTURE.md](references/ARCHITECTURE.md). `ORIENT` gets a compact system map; `TRACE` maps modules on the path; `IMPACT` and `VERIFY` include only modules needed to explain findings. For each included module record responsibility, interface, hidden implementation, seam, adapters, dependencies, linked paths and symbols, and evidence.
 
-**Complete when:** every included module and relationship is supported, marked inferred, or left unknown, and no module was added only to fill out a diagram.
+Describe current architecture before evaluating it. Respect ADRs and surface conflicts rather than silently re-litigating them.
 
-### 5. Verify from another direction
+Set the map stage to `MODULE_MAP` and active lens to `module`.
 
-Check key conclusions with evidence independent of the initial path: walk backward from output to entry, inspect a relationship from its caller, compare registration with configuration, compare implementation with test assertions, or run a focused existing check when safe. Record the command, exit status, and relevant output for runtime evidence.
+**Complete when:** every included module and relationship is supported, inferred, or unknown; no module exists only to fill a diagram; linked source locations are verified; and the map advances or records `stop-after=MODULE_MAP`.
 
-A blocked, skipped, flaky, timed-out, or credential-dependent check remains a limitation. Re-check the worktree after commands that may generate files.
+### 6. Verify from another direction
 
-**Complete when:** each key conclusion is confirmed, contradicted, or explicitly unresolved.
+Check key conclusions with evidence independent of the initial path: walk backward from output to entry, inspect a relationship from its caller, compare registration with configuration, compare implementation with test assertions, or run a focused existing check when safe. Record command, exit status, and relevant output for runtime evidence.
 
-### 6. Render the HTML report
+Set the map stage to `VERIFY` and active lens to `evidence`. A blocked, skipped, flaky, timed-out, or credential-dependent check remains a limitation. Re-check worktree and mark changed covered files `STALE` when commands generate or modify content.
 
-Follow the output decision table in [references/HTML-REPORT.md](references/HTML-REPORT.md): default to one securely created temporary HTML file; write no file for response-only; or write only to an approved durable path. Open a produced file unless the user declines. Use HTML/CSS layout rather than Markdown or Mermaid diagrams:
+**Complete when:** each key conclusion is confirmed, contradicted, or explicitly unresolved; coverage and the frontier reflect verification work; and the map advances or records `stop-after=VERIFY`.
 
-- `ORIENT`: fixed-track architecture map plus dependency-ordered reading path;
-- `TRACE`: ordered flow rail with branches nested at their decision point;
-- `IMPACT`: `DIRECT`, `INDIRECT`, `VALIDATE`, and `NO EVIDENCE` bands;
-- `VERIFY`: contradiction-first verdict rows.
+### 7. Render the HTML report
 
-Every relationship in a visual also appears in an evidence table with paths and symbols. Annotate evidence independently as `SOURCE`, `RUNTIME`, `INFERRED`, `UNKNOWN`, or `CONTRADICTED`. Context-escape all dynamic values before inserting them into HTML.
+Follow [references/HTML-REPORT.md](references/HTML-REPORT.md). Use the selected mode's stable visual, a relationship evidence table, verified source links, a compact reading-coverage summary linked to `investigation-map.md`, and a compact vocabulary summary linked to `domain-concepts.md`.
 
-Return a concise chat summary with the direct answer and important unknowns. For file output, also return the absolute path; for response-only, confirm that no report file was created.
+Set the map stage to `REPORT`, render and validate `report.html`, then update the map with the report link and terminal or resumable state. Return a concise direct answer, important unknowns, coverage status, and absolute paths for every produced artifact. For response-only, confirm no files were created and include compact position and coverage in chat.
 
-**Complete when:** a produced report passes the HTML checks, opens successfully or reports the open failure, and its path is returned; or response-only findings are returned with no file created.
+**Complete when:** each generated file is below 1,000 lines, every named source symbol is linked, the report passes HTML checks and opens or reports the open failure, and the map accurately records completion or the next frontier.
 
-### 7. Offer the optional demo
+### 8. Offer the optional demo
 
-Offer a demo only when one bounded executable experiment would resolve an important unknown, validate a proposed interface, or make the traced behavior concrete. Present one short demo proposal containing:
+Offer a demo only when one bounded executable experiment would resolve an important unknown, validate a proposed interface, or make the traced behavior concrete. Present the contract required by [references/DEMO.md](references/DEMO.md), then ask for `isolated`, `in-place`, or `skip`. Stop before edits until explicit approval.
 
-- hypothesis;
-- observable behavior;
-- proposed interface and seam;
-- location and files likely to change;
-- verification command;
-- explicit non-goals.
+Set the map stage to `DEMO` only after approval. Demo source and generated artifacts follow the same source-link and 1,000-line document rules.
 
-Ask whether the user wants `isolated demo`, `in-place patch`, or `skip`. Stop before source edits. If the user accepts, follow [references/DEMO.md](references/DEMO.md).
-
-**Complete when:** no qualifying demo exists and none is offered; the user declines; or an approved demo has a recorded contract, implementation evidence, changed-file list, and disposition.
+**Complete when:** no qualifying demo exists, the user declines, or an approved demo has a recorded contract, implementation evidence, changed-file list, map update, and disposition.
 
 ## Parallel investigation
 
-For a broad repository, use parallel read-only subagents only when their scopes are independent. Preflight available capabilities, then make one parallel workflow with distinct lanes such as:
-
-- structure: manifests, bootstrap, entry points, and commands;
-- behavior: one named flow and its side effects;
-- verification: tests, configuration, callers, and contradictions.
-
-Give every child the repository scope, question, read-only authority, evidence format, and stop condition. Children return evidence reports and do not render the final HTML or spawn agents. The parent reconciles every claim and owns one final report. For a small scope, investigate directly.
+For a broad repository, use parallel read-only subagents only when scopes are independent. Give each child one non-overlapping frontier slice with repository scope, question, read-only authority, active mode/lens, file and line budgets, source-link requirements, evidence format, and stop condition. Children return evidence and coverage deltas; they do not edit the authoritative map, render final artifacts, or spawn agents. The parent reconciles all deltas and owns the maps and report. For small scopes, investigate directly.
 
 ## Final check
 
-- Scope, revision, and pre-existing changes are explicit.
-- The report answers one reading question rather than touring directories.
-- Every material claim has evidence or an uncertainty label.
-- Static analysis is not called runtime verification.
-- Domain terms and architecture terms are not conflated.
-- HTML visuals use the mode-appropriate stable layout; complex relationships fall back to an evidence table rather than crossing lines.
-- The report works offline and every dynamic value is context-escaped.
-- Project files remain unchanged unless the user approved a durable report path or demo.
-- Source code changed only through an explicitly approved demo.
+- The map shows current stage, selected mode, active lens, controls, revision, and resumable frontier.
+- Every in-scope area is represented at an honest granularity as read, partial, unread, queued, skipped, or stale.
+- No file over 1,000 lines was treated as one reading unit; exact inspected symbols or ranges are recorded.
+- Every material claim has evidence or an uncertainty label, and static analysis is not called runtime verification.
+- Every named code symbol in generated artifacts has a verified link and visible path/line range.
+- Domain concepts live in the separate domain document; the map and report only link or summarize them.
+- Architecture and domain terms are not conflated.
+- No generated file exceeds 1,000 physical lines; compact or shard before completion.
+- Project source remains unchanged unless the user explicitly approved a demo.
 - Demo output, if any, is bounded, executable, and easy to keep or discard.

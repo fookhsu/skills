@@ -1,6 +1,6 @@
 # Code-reading framework
 
-Select the lens named by the mode, then consult another lens only when it materially answers the reading question. The evidence lens applies to every mode; broad `ORIENT` normally uses all five.
+Select the lens named by the mode, then consult another lens only when it materially answers the reading question. The evidence lens applies to every mode; broad `ORIENT` normally uses all five. Record the active stage, mode, lens, reading frontier, and exact coverage in [INVESTIGATION-MAP.md](INVESTIGATION-MAP.md); maintain domain language separately under [DOMAIN-CONCEPTS.md](DOMAIN-CONCEPTS.md).
 
 ## 1. Behavior lens
 
@@ -118,20 +118,34 @@ These are search priorities, not assumed architectures.
 
 For an unlisted or polyglot stack, derive priorities from actual manifests, executable boundaries, registrations, and tests.
 
-## Vocabulary bridge
+## Bounded source slices
 
-Capture terms that a new contributor, user, and future agent need to communicate:
+Measure a candidate source file before reading it as a whole. Use `wc -l`, an equivalent metadata operation, or an editor/LSP index before requesting file contents.
 
-| Field | Meaning |
-|---|---|
-| Canonical term | Preferred project term |
-| Code names and aliases | Identifiers, acronyms, legacy names, or UI labels |
-| Meaning and limits | What it includes and what it must not be confused with |
-| Lifecycle/relationships | States, ownership, parents, or related concepts |
-| Evidence | Source, docs, schema, tests, or user confirmation |
-| Status | `CONFIRMED`, `CANDIDATE`, `AMBIGUOUS`, or `CONTRADICTED` |
+- Treat a file over 1,000 physical lines as a container, never as one reading unit.
+- Index declarations, exports, registrations, tests, or references first; select only the symbols that advance the current question.
+- Default to at most 400 aggregate source lines across one slice. `slice-lines` may change that budget but cannot exceed 1,000; each read consumes the remaining slice budget.
+- Prefer complete symbol bodies with the context needed to establish inputs, outputs, branches, and effects. Use bounded line ranges only when symbol-aware navigation is unavailable.
+- Record every inspected symbol or range as `READ` and its containing large file as `PARTIAL`. Preserve uninspected ranges as `UNREAD`; reading one function never marks the file complete.
+- Put newly discovered callers or dependencies onto the investigation-map frontier rather than following them after the slice budget is exhausted.
 
-Use `CONFIRMED` only with source, documentation, schema, tests, or explicit user clarification. Preserve collisions such as one word naming two concepts. Keep implementation locations in evidence instead of turning the vocabulary table into a file catalog.
+Generated project code follows the same size rule when it is relevant. Vendored, cached, and build output may instead be marked `SKIPPED` with a reason.
+
+## Source links
+
+Every named source symbol in generated Markdown or HTML—including functions, methods, classes, types, constants, handlers, registrations, and schema declarations—must be a clickable link. The visible label also includes the repository-relative `path:start-end` location so evidence remains usable when the link cannot open.
+
+Resolve links in this order:
+
+1. Prefer a recognized repository-host URL pinned to the full investigated revision and exact line range, such as a GitHub `blob/<revision>/<path>#Lx-Ly` URL.
+2. Otherwise link the absolute local file URI and show the exact line range in text. Do not claim that a browser-only file URI can select a line.
+3. For generated or dynamically registered symbols without their own stable source location, link the generator or registration site and label the symbol location `UNKNOWN`.
+
+Encode path segments and HTML attributes correctly. Verify the path, symbol, and line range against the recorded revision before emitting a link; never guess a URL or line number. Documentation sections may use their own stable anchors, but do not present a documentation link as source-code evidence.
+
+## Domain language
+
+Maintain the complete vocabulary bridge in the separate generated `domain-concepts.md` artifact defined by [DOMAIN-CONCEPTS.md](DOMAIN-CONCEPTS.md). The HTML report contains only a compact summary and a link. The investigation map contains only the document link and vocabulary-related frontier items, not concept definitions.
 
 ## Mode-specific completion
 
@@ -170,4 +184,4 @@ Lead with contradictions and keep unresolved edges explicit.
 
 ## Stop rule
 
-Stop exploring when the primary question and each material relationship are supported, contradicted, or marked unknown. More files without a sharper question are not more understanding.
+Stop a slice when its file or line budget is exhausted. Stop the investigation when the primary question and each material relationship are supported, contradicted, or marked unknown, or when `max-slices` or `stop-after` is reached. In every case, update the investigation map with exact `READ`, `PARTIAL`, and `UNREAD` coverage plus the next frontier item. More files without a sharper question are not more understanding.

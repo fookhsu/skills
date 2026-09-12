@@ -10,7 +10,7 @@ Offer these dispositions:
 
 - **Isolated demo** — preferred for an experiment. Use a managed worktree when available, or another clearly identified temporary workspace. Keep it inspectable until the user chooses to discard or integrate it.
 - **In-place patch** — use the current worktree only when the user wants a reviewable project change and existing edits can be preserved safely.
-- **Skip** — retain the reading map without implementation.
+- **Skip** — retain the investigation map, domain concepts, and report without implementation.
 
 If safe isolation cannot be established, stop and explain the blocker. Do not hide a demo inside the user's current changes.
 
@@ -67,9 +67,9 @@ Prefer replacing a slice of duplicated caller orchestration over adding another 
 
 ### 1. Reconfirm baseline
 
-Record revision, worktree state, demo location, and existing changes. In an isolated workspace, record the source revision. In-place, separate pre-existing files from demo files.
+Record revision, worktree state, demo location, and existing changes. In an isolated workspace, record the source revision. In-place, separate pre-existing files from demo files. Update the investigation map to stage `DEMO` only after approval; mark any changed previously read source `STALE`.
 
-**Complete when:** the baseline makes accidental overwrites detectable.
+**Complete when:** the baseline makes accidental overwrites detectable and the investigation map names the approved demo location and contract.
 
 ### 2. Establish an executable check
 
@@ -110,7 +110,7 @@ Return:
 - Recommended disposition: integrate | iterate | keep separate | discard
 ```
 
-For an isolated demo, provide the durable worktree/branch/artifact location or a patch reference before cleanup. Remove it only after the user asks. For an in-place patch, leave unrelated user changes untouched and distinguish them in the report.
+For an isolated demo, provide the durable worktree/branch/artifact location or a patch reference before cleanup. Remove it only after the user asks. For an in-place patch, leave unrelated user changes untouched and distinguish them in the report. Link every named changed source symbol under the source-link contract in [CODE-READING.md](CODE-READING.md), update coverage and affected domain evidence, and keep every generated document below 1,000 physical lines.
 
 ## Failure and stop conditions
 
