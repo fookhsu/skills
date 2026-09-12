@@ -50,15 +50,18 @@ node scripts/install-skill.mjs codebase-lens --scope project
 cp -r packages/codebase-lens/skills/codebase-lens ~/.claude/skills/
 ```
 
-You do not need to memorize any parameters. Describe the task in ordinary language and the skill infers the rest:
+Describe the task in ordinary language; the skill infers how to investigate it. See the [codebase-lens README](./packages/codebase-lens/README.md) for precise usage and output behavior.
+
+<details>
+<summary><strong>Usage examples</strong></summary>
 
 ```text
-/skill:codebase-lens what is this project and where should I start reading?
-trace how POST /orders in packages/api reaches a committed order
-what would break if Run.status gained a new value?
+/skill:codebase-lens Explain what this project does and where I should start reading.
+/skill:codebase-lens Trace how POST /orders reaches a committed order.
+/skill:codebase-lens What could break if Run.status gains a new value?
 ```
 
-The `key=value` control surface exists for agents and automation. See the [codebase-lens README](./packages/codebase-lens/README.md) for the full reference.
+</details>
 
 ## Packages
 
