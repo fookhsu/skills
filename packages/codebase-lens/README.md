@@ -49,7 +49,7 @@ Arguments are appended to the skill as natural-language instructions; they are n
 | `target` | URL, command, page, event, job, file, symbol, feature, or diff | inferred from request | Concrete investigation subject |
 | `question` | one quoted question | framed from `target` | Primary stop question |
 | `revision` | commit, branch, tag, or diff range | current revision | Evidence baseline or impact range |
-| `workspace` | `temp`, `response-only`, or one explicitly approved directory | `temp` | Artifact lifetime and location |
+| `workspace` | `docs`, `temp`, `response-only`, or one explicitly approved directory | `docs` (→ `docs/codebase-lens/`) | Artifact lifetime and location |
 | `resume` | path to an existing `investigation-map.md` | none | Resume point; its parent directory overrides `workspace` |
 | `slice-files` | positive integer | `8` | Maximum candidate files per reading slice |
 | `slice-lines` | integer from `1` to `1000` | `400` | Maximum aggregate source lines in one reading slice |
@@ -79,7 +79,7 @@ Control precedence is: `resume` chooses the starting state and workspace; `scope
 ### 1. Let the skill infer the mode
 
 ```text
-/skill:codebase-lens scope=. workspace=temp open=true
+/skill:codebase-lens scope=. workspace=docs open=true
 ```
 
 A broad repository request normally infers `ORIENT`.
@@ -87,13 +87,13 @@ A broad repository request normally infers `ORIENT`.
 ### 2. Orient a repository with explicit reading budgets
 
 ```text
-/skill:codebase-lens mode=ORIENT scope=. question="How does the primary entry point reach central behavior and effects?" workspace=temp slice-files=8 slice-lines=400 max-slices=auto stop-after=REPORT open=true demo=skip
+/skill:codebase-lens mode=ORIENT scope=. question="How does the primary entry point reach central behavior and effects?" workspace=docs slice-files=8 slice-lines=400 max-slices=auto stop-after=REPORT open=true demo=skip
 ```
 
 ### 3. Orient one package in a monorepo
 
 ```text
-/skill:codebase-lens mode=ORIENT scope=packages/payments target="payments package" workspace=temp slice-files=6 slice-lines=350 max-slices=4 stop-after=MODULE_MAP open=false
+/skill:codebase-lens mode=ORIENT scope=packages/payments target="payments package" workspace=docs slice-files=6 slice-lines=350 max-slices=4 stop-after=MODULE_MAP open=false
 ```
 
 This intentionally stops before verification and reporting; the map records `MODULE_MAP` and the remaining frontier.
@@ -101,49 +101,49 @@ This intentionally stops before verification and reporting; the map records `MOD
 ### 4. Trace an HTTP request
 
 ```text
-/skill:codebase-lens mode=TRACE scope=packages/api target="POST /orders" question="How does POST /orders reach a committed order?" workspace=temp slice-files=8 slice-lines=400 max-slices=5 stop-after=REPORT open=true
+/skill:codebase-lens mode=TRACE scope=packages/api target="POST /orders" question="How does POST /orders reach a committed order?" workspace=docs slice-files=8 slice-lines=400 max-slices=5 stop-after=REPORT open=true
 ```
 
 ### 5. Trace a CLI command
 
 ```text
-/skill:codebase-lens mode=TRACE scope=cmd target="orders import command" question="How are arguments parsed, validated, persisted, and reported?" workspace=temp slice-files=5 slice-lines=300 max-slices=4 stop-after=VERIFY open=false
+/skill:codebase-lens mode=TRACE scope=cmd target="orders import command" question="How are arguments parsed, validated, persisted, and reported?" workspace=docs slice-files=5 slice-lines=300 max-slices=4 stop-after=VERIFY open=false
 ```
 
 ### 6. Trace an event or background job
 
 ```text
-/skill:codebase-lens mode=TRACE scope=packages/workers target="OrderPlaced consumer" question="What selects the consumer, what does it change, and how are retries handled?" include="packages/workers/**,packages/orders/**" exclude="**/fixtures/**" workspace=temp slice-files=7 slice-lines=400 max-slices=6 stop-after=REPORT open=true
+/skill:codebase-lens mode=TRACE scope=packages/workers target="OrderPlaced consumer" question="What selects the consumer, what does it change, and how are retries handled?" include="packages/workers/**,packages/orders/**" exclude="**/fixtures/**" workspace=docs slice-files=7 slice-lines=400 max-slices=6 stop-after=REPORT open=true
 ```
 
 ### 7. Analyze a symbol's impact
 
 ```text
-/skill:codebase-lens mode=IMPACT scope=packages/core target="Run.status" question="What changes if Run.status gains a value?" revision=HEAD workspace=temp slice-files=8 slice-lines=400 max-slices=auto stop-after=REPORT open=true
+/skill:codebase-lens mode=IMPACT scope=packages/core target="Run.status" question="What changes if Run.status gains a value?" revision=HEAD workspace=docs slice-files=8 slice-lines=400 max-slices=auto stop-after=REPORT open=true
 ```
 
 ### 8. Analyze a branch or diff range
 
 ```text
-/skill:codebase-lens mode=IMPACT scope=. target="status-model diff" revision=main..feature/run-status include="packages/**,migrations/**,config/**" exclude="dist/**,coverage/**" workspace=temp slice-files=10 slice-lines=500 max-slices=6 stop-after=REPORT open=true
+/skill:codebase-lens mode=IMPACT scope=. target="status-model diff" revision=main..feature/run-status include="packages/**,migrations/**,config/**" exclude="dist/**,coverage/**" workspace=docs slice-files=10 slice-lines=500 max-slices=6 stop-after=REPORT open=true
 ```
 
 ### 9. Verify an existing architecture claim
 
 ```text
-/skill:codebase-lens mode=VERIFY scope=packages/indexer target="The indexer writes only through SearchStore" question="Is every production write routed through SearchStore?" revision=HEAD workspace=temp slice-files=6 slice-lines=350 max-slices=4 stop-after=VERIFY open=false
+/skill:codebase-lens mode=VERIFY scope=packages/indexer target="The indexer writes only through SearchStore" question="Is every production write routed through SearchStore?" revision=HEAD workspace=docs slice-files=6 slice-lines=350 max-slices=4 stop-after=VERIFY open=false
 ```
 
 ### 10. Combine trace and independent verification
 
 ```text
-/skill:codebase-lens mode=TRACE+VERIFY scope=packages/checkout target="authenticated checkout" question="How does authenticated checkout commit payment and order state, and is the path independently confirmed?" workspace=temp slice-files=8 slice-lines=400 max-slices=8 stop-after=REPORT open=true
+/skill:codebase-lens mode=TRACE+VERIFY scope=packages/checkout target="authenticated checkout" question="How does authenticated checkout commit payment and order state, and is the path independently confirmed?" workspace=docs slice-files=8 slice-lines=400 max-slices=8 stop-after=REPORT open=true
 ```
 
 ### 11. Restrict a very large repository
 
 ```text
-/skill:codebase-lens mode=ORIENT scope=. target="public API server" include="apps/api/**,packages/domain/**,packages/storage/**" exclude="**/generated/**,**/vendor/**,**/fixtures/**" workspace=temp slice-files=5 slice-lines=300 max-slices=3 stop-after=INVESTIGATE open=false
+/skill:codebase-lens mode=ORIENT scope=. target="public API server" include="apps/api/**,packages/domain/**,packages/storage/**" exclude="**/generated/**,**/vendor/**,**/fixtures/**" workspace=docs slice-files=5 slice-lines=300 max-slices=3 stop-after=INVESTIGATE open=false
 ```
 
 Only three slices are read. Other discovered areas remain explicit `UNREAD` rows.
@@ -151,7 +151,7 @@ Only three slices are read. Other discovered areas remain explicit `UNREAD` rows
 ### 12. Read a source file larger than 1,000 lines safely
 
 ```text
-/skill:codebase-lens mode=TRACE scope=src target="src/legacy-controller.ts#submitOrder" question="What does submitOrder validate and call?" workspace=temp slice-files=2 slice-lines=250 max-slices=3 stop-after=VERIFY open=false
+/skill:codebase-lens mode=TRACE scope=src target="src/legacy-controller.ts#submitOrder" question="What does submitOrder validate and call?" workspace=docs slice-files=2 slice-lines=250 max-slices=3 stop-after=VERIFY open=false
 ```
 
 The skill indexes declarations first, reads the target function and required neighboring symbols in bounded ranges, marks those symbols `READ`, and leaves the containing file `PARTIAL`.
@@ -206,13 +206,13 @@ The response includes compact position, coverage, domain terms, direct findings,
 ### 18. Generate artifacts without opening the browser
 
 ```text
-/skill:codebase-lens mode=IMPACT scope=packages/schema target="Order.version" revision=main..HEAD workspace=temp slice-files=8 slice-lines=400 max-slices=5 stop-after=REPORT open=false
+/skill:codebase-lens mode=IMPACT scope=packages/schema target="Order.version" revision=main..HEAD workspace=docs slice-files=8 slice-lines=400 max-slices=5 stop-after=REPORT open=false
 ```
 
 ### 19. Request an isolated demo preference
 
 ```text
-/skill:codebase-lens mode=TRACE+VERIFY scope=packages/checkout target="checkout orchestration" workspace=temp slice-files=8 slice-lines=400 max-slices=6 stop-after=REPORT open=true demo=isolated
+/skill:codebase-lens mode=TRACE+VERIFY scope=packages/checkout target="checkout orchestration" workspace=docs slice-files=8 slice-lines=400 max-slices=6 stop-after=REPORT open=true demo=isolated
 ```
 
 `demo=isolated` records the preferred disposition. The skill still presents a demo contract and waits for explicit approval before editing source.
@@ -230,11 +230,13 @@ An in-place patch begins only after the proposed behavior, seam, file set, verif
 Default file-producing runs create:
 
 ```text
-<os-temp-dir>/codebase-lens-<repo>-<mode>-<timestamp>-<random>/
+docs/codebase-lens/
 ├── investigation-map.md
 ├── domain-concepts.md
 └── report.html
 ```
+
+The default `docs` location resolves to `docs/codebase-lens/` and is pre-approved by convention; `workspace=temp` still creates a fresh OS-temporary directory, and `workspace=response-only` writes no files. Consider adding `docs/codebase-lens/` to `.gitignore` when these are local working artifacts.
 
 ### `investigation-map.md`
 
@@ -261,6 +263,8 @@ The report summarizes the answer and links to both Markdown artifacts. Visuals a
 - an ordered rail for `TRACE` execution flow;
 - `DIRECT`, `INDIRECT`, `VALIDATE`, and `NO EVIDENCE` bands for `IMPACT`;
 - contradiction-first verdict rows for `VERIFY`.
+
+Flowcharts, architecture diagrams, and sequence diagrams may also be authored in Mermaid and rendered client-side from a pinned runtime; sequence diagrams label participants and messages with domain concepts and key-function lifecycles. Pure CSS patterns remain available for simple structure and offline fallback.
 
 Every named source symbol is a clickable link pinned to the investigated revision when the repository host supports it. A verified local-file link with visible path and line range is used otherwise.
 

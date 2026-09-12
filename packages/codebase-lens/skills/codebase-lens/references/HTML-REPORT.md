@@ -8,13 +8,25 @@ Choose exactly one branch:
 
 | `workspace` value | File behavior | Resume and open behavior |
 |---|---|---|
-| `temp` (default) | Securely create one fresh OS-temporary directory containing `investigation-map.md`, `domain-concepts.md`, and eventually `report.html` | Resumable while the directory exists; open `report.html` unless `open=false` |
+| `docs` (default) | Create or reuse `docs/codebase-lens/` under the current directory, containing `investigation-map.md`, `domain-concepts.md`, and eventually `report.html` | Durable and resumable; open `report.html` unless `open=false` |
+| `temp` | Securely create one fresh OS-temporary directory with the same three files | Resumable while the directory exists; open `report.html` unless `open=false` |
 | `response-only` | Write no files | Not resumable from disk; return compact position, coverage, domain terms, and findings in chat |
 | Approved directory | Create or resume artifacts only in that exact directory | Durable and resumable; open `report.html` unless `open=false` |
 
-A durable workspace inside the investigated repository is a project-file edit: show the directory and obtain approval before writing it. Approval covers investigation artifacts only, not source edits. Do not also create a temporary copy unless the user requests both. A `resume=<map-path>` selects the existing map's parent directory and takes precedence over `workspace`.
+Writing investigation artifacts under the current directory is a project-file edit: approval covers investigation artifacts only, not source edits. The default `docs` location resolves to `docs/codebase-lens/` and is pre-approved by convention; a custom directory is approved by naming it explicitly. Do not also create a temporary copy unless the user requests both. A `resume=<map-path>` selects the existing map's parent directory and takes precedence over `workspace`.
 
-For the default branch, use the operating system or standard-library temporary-directory facility with a random suffix and exclusive file creation:
+For `docs` (the default), create or reuse `docs/codebase-lens/` under the current directory using the three canonical filenames:
+
+```text
+<current-directory>/docs/codebase-lens/
+├── investigation-map.md
+├── domain-concepts.md
+└── report.html
+```
+
+Never overwrite an unrelated file already in `docs/codebase-lens/`. If the three files already exist from an earlier investigation, resume them instead of clobbering, after verifying the map's repository and revision. Suggest adding `docs/codebase-lens/` to `.gitignore` when these are local working artifacts.
+
+For `temp`, use the operating system or standard-library temporary-directory facility with a random suffix and exclusive file creation:
 
 ```text
 <tmpdir>/codebase-lens-<repo>-<mode>-<timestamp>-<random>/
@@ -29,20 +41,20 @@ Use relative links among the three artifacts so moving a durable workspace prese
 
 ## Rendering contract
 
-- Produce valid standalone HTML5 with UTF-8, viewport metadata, inline CSS, and no build step.
-- Use semantic HTML, CSS Grid/Flexbox, and inline SVG only when a freeform connector is necessary.
-- Do not use Markdown diagrams, Mermaid, Tailwind, web fonts, or CDN assets. The file must work offline.
+- Produce valid standalone HTML5 with UTF-8, viewport metadata, and inline CSS; no build step is required to view the artifact.
+- Use semantic HTML, CSS Grid/Flexbox, and inline SVG or client-rendered Mermaid for diagrams. Mermaid is permitted for flowcharts, architecture diagrams, and sequence diagrams, rendered by the Mermaid runtime as specified under "Mermaid diagrams".
+- Do not use Markdown diagrams, Tailwind, or web fonts. CDN assets are allowed only for the Mermaid runtime (`mermaid.js`); pin a specific version so rendering is reproducible. Every other resource stays local.
 - Context-escape every non-template value before inserting it into HTML, including user input, repository content, paths, command output, labels, generated prose, and source-link attributes. Escape text nodes and quoted attributes separately; at minimum text must encode `&`, `<`, and `>`, while attributes must also encode the active quote character. Never interpolate dynamic raw HTML or place dynamic values in `<style>`, `<script>`, URL-valued attributes, or event-handler attributes.
 - Follow the source-link contract in [CODE-READING.md](CODE-READING.md). Every named source symbol is a clickable, verified link with visible repository-relative path and line range; artifact-to-artifact links are relative.
 - Keep each generated file below 1,000 physical lines without minifying or collapsing readable structure to evade the limit. Compact the report and move full coverage or terminology into their dedicated artifacts; shard domain concepts as specified by [DOMAIN-CONCEPTS.md](DOMAIN-CONCEPTS.md).
-- Include no executable JavaScript unless the user explicitly requests interaction. Prefer `<details>` for disclosure.
+- Executable JavaScript is limited to rendering Mermaid diagrams plus any interaction the user explicitly requests. Include no other scripts. Prefer `<details>` for disclosure when interaction is not needed.
 - Keep the report readable at 360px and at desktop widths. Tables use horizontal overflow containers; long paths wrap with `overflow-wrap:anywhere`.
 - Use color as a secondary signal. Every status also has visible text.
 - Use a restrained neutral palette with separate green, blue, amber, and red status accents. Avoid gradients and decorative effects.
 
 ## Stable diagram patterns
 
-The report must choose a pattern that fits the relationship. Do not force a freeform graph onto every question.
+The report must choose a pattern that fits the relationship. Do not force a freeform graph onto every question. The CSS patterns below remain the default for simple structure; use Mermaid (client-rendered, see "Mermaid diagrams") when a freeform connector, branching, or a lifeline sequence is genuinely needed.
 
 ### Architecture: fixed tracks
 
@@ -80,6 +92,32 @@ Render a causal flow as an `<ol>`. Each node gets a fixed sequence number, conci
 
 Put branches directly under the node that selects them, using a nested `.branches` block. Keep the main rail linear; do not draw return arrows across the page.
 
+### Sequence: participant lifelines
+
+Render a call/return lifecycle across participants as a CSS grid: one header column per participant, messages as numbered rows with a `from → to` route and a label. Use this for `TRACE` or any question whose answer is the ordered lifecycle of key functions. Label participants and messages with `CONFIRMED` domain concepts from [domain-concepts.md](DOMAIN-CONCEPTS.md), not ad-hoc identifiers.
+
+```html
+<div class="sequence" aria-label="Order lifecycle">
+  <div class="seq-participants">
+    <div class="seq-participant">HTTP adapter</div>
+    <div class="seq-participant">Order intake</div>
+    <div class="seq-participant">Pricing</div>
+  </div>
+  <div class="seq-message">
+    <span class="seq-num">1</span>
+    <span class="seq-route">HTTP adapter <span class="seq-arrow">&#8594;</span> Order intake</span>
+    <span class="seq-label"><code>submit(cart)</code> · validate</span>
+  </div>
+  <div class="seq-message">
+    <span class="seq-num">2</span>
+    <span class="seq-route">Order intake <span class="seq-arrow">&#8594;</span> Pricing</span>
+    <span class="seq-label"><code>price(cart)</code> · returns quote</span>
+  </div>
+</div>
+```
+
+Each message names the concrete function, its lifecycle phase (`register`, `validate`, `execute`, `emit`, `commit`, `cleanup`), and any material return value. Keep the fewest participants that explain the sequence. Note a return in the label instead of drawing a return arrow unless the return is itself the finding. This is the CSS alternative to a Mermaid `sequenceDiagram`; use Mermaid when activations, `alt`/`opt`/`loop` fragments, or parallel lifelines would make the grid unreadable.
+
 ### Impact: radial lists without radial geometry
 
 Use four adjacent bands labelled `DIRECT`, `INDIRECT`, `VALIDATE`, and `NO EVIDENCE`. Each item states the concrete relationship and its independent evidence status. This preserves both dimensions without a fragile graph.
@@ -92,9 +130,33 @@ Use one row per claim with `CONFIRMED`, `CONTRADICTED`, or `UNRESOLVED`, followe
 
 When depth is material, use paired rectangles: a short interface band over an implementation body. Compare modules side by side only when dimensions mean the same thing. Label the caller knowledge represented by the interface; do not imply a line-count metric.
 
+### Mermaid diagrams
+
+Mermaid is permitted for flowcharts, architecture graphs, and sequence diagrams. It renders client-side from the Mermaid runtime, so the report is no longer guaranteed to work fully offline; load a pinned runtime version from a CDN and keep the CSS pattern as a graceful fallback where offline use matters.
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+<pre class="mermaid">
+flowchart LR
+  HTTP[HTTP adapter] --> Order[Order intake] --> Pricing[Pricing]
+  Pricing --> Order
+</pre>
+```
+
+Rules:
+
+- Use a `flowchart` for `ORIENT` architecture or branching, and a `sequenceDiagram` for a `TRACE` lifecycle of key functions. Keep the CSS patterns as the default and reach for Mermaid only when freeform connectors, `alt`/`opt`/`loop` fragments, or lifelines would otherwise cross.
+- Sequence diagrams combine with [domain-concepts.md](DOMAIN-CONCEPTS.md): participants and message labels use `CONFIRMED` domain terms, and messages name the concrete function plus its lifecycle phase (`register`, `validate`, `execute`, `emit`, `commit`, `cleanup`). Do not promote an identifier to a participant just to fill the diagram.
+- Pin the runtime version and use `theme: 'neutral'` or a matching restrained theme. Load only the Mermaid runtime from a CDN; keep web fonts and Tailwind out.
+- Escape every dynamic label inside the Mermaid source: quote labels and encode the active quote, `#`, `;`, `{`, `}`, `<`, `&`. Keep node and message text short; do not embed HTML or links inside Mermaid.
+- Put source links in the evidence table or a caption below the diagram, not in Mermaid `click` handlers. Avoid Mermaid `click`/URL callbacks entirely; they bypass the context-escaping rule.
+- Wrap the diagram in a horizontal overflow container. The runtime SVG is generated in the browser, so the 1,000-line budget applies to the source you write, not the rendered output.
+- The seven-node overview limit still applies to any single diagram; split larger graphs or sequences, and keep the relationship evidence table authoritative for precision.
+
 ### Inline SVG exception
 
-Use inline SVG only when topology itself is the finding. Before writing it:
+Prefer Mermaid (above) for freeform connectors. Hand-write inline SVG only when topology itself is the finding and Mermaid cannot express it. Before writing it:
 
 1. Place nodes on explicit rows and columns.
 2. Give every node a fixed width and height.
@@ -113,7 +175,7 @@ Include only sections useful to the selected mode, in this order:
 1. **Header** — repository, scope, revision, current stage, selected modes, active lens, controls, generated time, and worktree status.
 2. **Direct answer** — one compact statement that answers the reading question.
 3. **Workflow and coverage** — stage/mode/lens position; `READ`, `PARTIAL`, `UNREAD`, `SKIPPED`, and `STALE` totals at the map's current granularity; next frontier; link to `investigation-map.md`.
-4. **Primary visual** — architecture tracks for `ORIENT`, ordered rail for `TRACE`, impact bands for `IMPACT`, verdict rows for `VERIFY`.
+4. **Primary visual** — architecture tracks or a Mermaid `flowchart` for `ORIENT`; ordered rail or a sequence/lifecycle diagram (CSS lifelines or Mermaid `sequenceDiagram`) for `TRACE`; impact bands for `IMPACT`; verdict rows for `VERIFY`. Diagrams may be CSS-rendered or client-rendered Mermaid.
 5. **Relationship evidence** — source module, relationship, target module, linked paths/symbols, evidence status.
 6. **Module details** — responsibility, interface, hidden implementation, seam, adapters, dependencies, and linked source symbols.
 7. **Domain concepts summary** — only terms required for the answer plus a link to `domain-concepts.md`; keep full definitions in that document.
@@ -171,6 +233,14 @@ The visual carries structure; the evidence table carries precision; the map carr
     .flow-step strong, .flow-step code { display: block; }
     .impact-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
     .impact-band { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; }
+    .sequence { overflow-x: auto; }
+    .seq-participants { display: grid; grid-template-columns: repeat(auto-fit,minmax(120px,1fr)); gap: 8px; margin-bottom: 10px; }
+    .seq-participant { border-bottom: 3px solid var(--blue); font-weight: 700; padding: 6px 4px; }
+    .seq-message { display: grid; grid-template-columns: 32px minmax(0,1fr) minmax(0,1.4fr); gap: 10px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid var(--line); }
+    .seq-num { width: 26px; height: 26px; display: grid; place-items: center; border: 2px solid var(--blue); border-radius: 50%; font-size: 12px; font-weight: 700; align-self: center; }
+    .seq-route { overflow-wrap: anywhere; }
+    .seq-arrow { color: var(--muted); }
+    .seq-label { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; background: var(--surface); }
     th, td { padding: 10px; border: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
@@ -185,6 +255,8 @@ The visual carries structure; the evidence table carries precision; the map carr
       .architecture.tracks-3, .architecture.tracks-4 { grid-template-columns: 1fr; gap: 8px; }
       .track-arrow { transform: rotate(90deg); height: 24px; }
       .impact-grid { grid-template-columns: 1fr; }
+      .seq-message { grid-template-columns: 28px minmax(0,1fr); }
+      .seq-label { grid-column: 2; }
     }
   </style>
 </head>
@@ -215,6 +287,8 @@ Before opening the report:
 - confirm the header and coverage section agree with the map's current stage, mode, lens, revision, and coverage totals;
 - confirm a three-track architecture has three sections and two arrows with `tracks-3`, or a four-track architecture has four sections and three arrows with `tracks-4`;
 - scan for unescaped dynamic values and accidental Markdown fences;
+- when Mermaid is used, confirm the runtime version is pinned, `mermaid.initialize` is present, the source sits in `<pre class="mermaid">` blocks with no Markdown fences, and no `click`/URL callback carries dynamic values;
+- confirm every sequence-diagram participant and message label uses domain terms from `domain-concepts.md`, and that its material relationships also appear in the evidence table;
 - confirm every named source symbol is a link with a visible path and line range, and sample links against the recorded revision;
 - confirm every material relationship in the primary visual appears in the evidence table;
 - confirm evidence, coverage, and verdict colors also have text labels;

@@ -41,7 +41,7 @@ Arguments are a natural-language control contract appended to `/skill:codebase-l
 | `target` | URL, command, page, event, job, file, symbol, feature, or diff; inferred from request | Concrete subject |
 | `question` | one quoted question; framed from target by default | Primary stop question |
 | `revision` | commit, branch, tag, or diff range; current revision by default | Evidence baseline |
-| `workspace` | `temp`, `response-only`, or one approved directory; `temp` by default | Artifact lifetime and location |
+| `workspace` | `docs`, `temp`, `response-only`, or one approved directory; `docs` by default (→ `docs/codebase-lens/`) | Artifact lifetime and location |
 | `resume` | path to an existing `investigation-map.md`; none by default | Resume point; its workspace wins over `workspace` |
 | `slice-files` | positive integer; `8` by default | Maximum candidate files in one reading slice |
 | `slice-lines` | integer from `1` to `1000`; `400` by default | Maximum aggregate source lines in one reading slice |
@@ -58,10 +58,10 @@ Read [references/INVESTIGATION-MAP.md](references/INVESTIGATION-MAP.md) and [ref
 
 ## Artifacts
 
-A file-producing investigation uses one artifact workspace with separate responsibilities:
+A file-producing investigation uses one artifact workspace with separate responsibilities. The default location is `docs/codebase-lens/` under the current directory; the `workspace` control selects another branch.
 
 ```text
-<artifact-workspace>/
+<artifact-workspace>/          # default: <current-directory>/docs/codebase-lens/
 ├── investigation-map.md  # stage, mode, lens, read/unread coverage, frontier
 ├── domain-concepts.md    # canonical domain language and linked evidence
 └── report.html           # final human-facing answer
@@ -80,7 +80,7 @@ Every named source symbol in generated artifacts must be a clickable, revision-p
 - Treat names and directory conventions as search hints, not evidence. A static import or call graph is not runtime behavior.
 - Use adaptive coverage rather than enumerating a large repository file by file. Coarse unread rows remain explicit.
 - A source file over 1,000 lines is a container: index it, then read bounded symbols or ranges. Never mark the whole file `READ` after inspecting only selected functions.
-- Choose one output branch: default temporary artifact workspace, response-only with no files, or one user-approved durable workspace. Writing durable investigation artifacts is not approval to edit project source.
+- Choose one output branch: the default `docs` artifact workspace (`docs/codebase-lens/` under the current directory), a `temp` directory, response-only with no files, or one user-approved durable workspace. Writing investigation artifacts is not approval to edit project source.
 - Source edits require the demo gate in [references/DEMO.md](references/DEMO.md). An invitation or `demo` preference is not approval.
 - Respond and write artifacts in the user's language unless the project has a documented language convention.
 
