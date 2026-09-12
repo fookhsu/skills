@@ -299,7 +299,7 @@ The report summarizes the answer and links to both Markdown artifacts. Visuals a
 
 Graph-shaped relationships may also be authored in Mermaid and rendered client-side from a pinned runtime; sequence diagrams label participants and messages with domain concepts and key-function lifecycles. Fixed tracks, impact bands, mass diagrams, and other editorial visuals use CSS or inline SVG when exact geometry communicates the finding better.
 
-Open [`HTML-REPORT-PREVIEW.html`](skills/codebase-lens/references/HTML-REPORT-PREVIEW.html) to inspect the complete light/dark palette, explicit color constraints, and examples of every supported CSS, SVG, and Mermaid diagram type.
+Open the human-facing [`HTML-REPORT-PREVIEW.html`](HTML-REPORT-PREVIEW.html) to inspect the complete light/dark palette, explicit color constraints, and examples of every supported CSS, SVG, and Mermaid diagram type. The preview sits outside the skill and is not loaded during skill execution.
 
 Every named source symbol is a clickable link pinned to the investigated revision when the repository host supports it. A verified local-file link with visible path and line range is used otherwise.
 
@@ -312,7 +312,8 @@ The demo is evidence, not production completion. Its result states what the expe
 ## Package contents
 
 ```text
-skills/codebase-lens/
+HTML-REPORT-PREVIEW.html       # human-facing visual gallery
+skills/codebase-lens/          # agent-facing skill root
 ├── SKILL.md
 ├── agents/
 │   └── openai.yaml
@@ -322,7 +323,6 @@ skills/codebase-lens/
     ├── DEMO.md
     ├── DOMAIN-CONCEPTS.md
     ├── HTML-REPORT.md
-    ├── HTML-REPORT-PREVIEW.html
     └── INVESTIGATION-MAP.md
 ```
 

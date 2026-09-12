@@ -41,8 +41,6 @@ Use relative links among the three artifacts so moving a durable workspace prese
 
 ## Rendering contract
 
-Open [HTML-REPORT-PREVIEW.html](HTML-REPORT-PREVIEW.html) before rendering. It is the visual reference for the complete background ladder, allowed color ranges, red budget, Mermaid treatment, and every supported diagram type. A generated report selects only diagrams useful to its question; it does not reproduce the gallery.
-
 - Produce valid standalone HTML5 with UTF-8, viewport metadata, and inline CSS; no build step is required to view the artifact.
 - Use semantic HTML, CSS Grid/Flexbox, inline SVG, or client-rendered Mermaid for diagrams. Mermaid is a first-class option across its diagram types, themed from the same token block so it matches the palette and the dark scheme; see "Mermaid diagrams".
 - Do not use Markdown diagrams, Tailwind, or web fonts. CDN assets are allowed only for the Mermaid runtime (`mermaid.js`); pin a specific version so rendering is reproducible. Every other resource stays local.

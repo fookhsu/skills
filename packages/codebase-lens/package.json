@@ -1,6 +1,6 @@
 {
   "name": "codebase-lens",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Resumable, evidence-backed codebase reading with coverage maps, linked symbols, domain concepts, HTML reports, impact analysis, and opt-in demos.",
   "keywords": [
     "pi-package",
@@ -31,7 +31,8 @@
     "url": "https://github.com/fookhsu/skills/issues"
   },
   "files": [
-    "skills/"
+    "skills/",
+    "HTML-REPORT-PREVIEW.html"
   ],
   "pi": {
     "skills": [
