@@ -32,13 +32,26 @@ Add `-l` to write the install to project settings (`.pi/settings.json`) instead 
 
 ## Invocation syntax
 
-The skill is user-invoked:
+You do not need to learn a parameter language. Invoke the skill and describe what you want in ordinary language, in whatever language you use:
+
+```text
+/skill:codebase-lens What is this project, and where should I start reading?
+/skill:codebase-lens Trace how POST /orders in packages/api reaches a committed order
+/skill:codebase-lens What would break if Run.status gained a new value?
+/skill:codebase-lens Verify that every production write goes through SearchStore
+```
+
+The skill infers the mode, scope, target, question, and reading budgets from that description, and replies in your language. Keep asking follow-up questions in the same conversation; the investigation map preserves the position.
+
+### Explicit control (for agents and automation)
+
+The same skill also accepts a machine-friendly control surface:
 
 ```text
 /skill:codebase-lens key=value key=value ...
 ```
 
-Arguments are appended to the skill as natural-language instructions; they are not parsed by a CLI program. Quotes are recommended for values containing spaces. The parameter names and values below are the complete supported control surface.
+These values are appended as natural-language instructions; they are not parsed by a CLI program. Quotes are recommended for values containing spaces. The parameter table and the numbered examples below document the complete control surface so models and automation can see exactly what is available — users do not have to write them.
 
 ## Complete parameter reference
 
@@ -75,6 +88,8 @@ Control precedence is: `resume` chooses the starting state and workspace; `scope
 `mode` is the investigation intent. `lens` is the perspective currently applied. `stage` is the position in the workflow. All three appear in `investigation-map.md`.
 
 ## Usage examples
+
+> **Users can just describe what they want.** These `key=value` forms are a reference for the model and for automation: they show the full control surface and the expected behavior of each mode. For example, instead of `mode=TRACE scope=packages/api target="POST /orders"`, a user can simply say *"trace how POST /orders works in packages/api"*, and the skill infers the same parameters.
 
 ### 1. Let the skill infer the mode
 
