@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codebase Lens · 柔和配色预览</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f3f5f8;
+      --surface: #ffffff;
+      --line: #d6dee8;
+      --grid: #e9eef4;
+      --ink: #202b38;
+      --muted: #647386;
+      --blue: #2589bd;
+      --blue-fill: rgba(37, 137, 189, .09);
+      --green: #43846b;
+      --green-fill: rgba(67, 132, 107, .09);
+      --amber: #b97819;
+      --amber-fill: rgba(185, 120, 25, .10);
+      --red: #a85b54;
+      --red-fill: rgba(168, 91, 84, .07);
+      --cat-1: #3b9cc5;
+      --cat-1-fill: rgba(59, 156, 197, .10);
+      --cat-2: #7b6dbc;
+      --cat-2-fill: rgba(123, 109, 188, .10);
+      --cat-3: #d0912f;
+      --cat-3-fill: rgba(208, 145, 47, .10);
+      --cat-4: #35998d;
+      --cat-4-fill: rgba(53, 153, 141, .10);
+      --radius: 8px;
+      --radius-sm: 5px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1724;
+        --surface: #172235;
+        --line: #33445c;
+        --grid: #202d43;
+        --ink: #edf4fb;
+        --muted: #a7b6c8;
+        --blue: #67c2eb;
+        --blue-fill: rgba(103, 194, 235, .12);
+        --green: #7bc3a3;
+        --green-fill: rgba(123, 195, 163, .11);
+        --amber: #f0bd5d;
+        --amber-fill: rgba(240, 189, 93, .12);
+        --red: #d68b84;
+        --red-fill: rgba(214, 139, 132, .08);
+        --cat-1: #69c3e3;
+        --cat-1-fill: rgba(105, 195, 227, .12);
+        --cat-2: #aa99e2;
+        --cat-2-fill: rgba(170, 153, 226, .12);
+        --cat-3: #e6ad52;
+        --cat-3-fill: rgba(230, 173, 82, .12);
+        --cat-4: #63c3b5;
+        --cat-4-fill: rgba(99, 195, 181, .12);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: var(--blue); text-underline-offset: 3px; }
+    code { font: 13px/1.45 var(--mono); background: var(--grid); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 1px 5px; }
+    main { width: min(1180px, 100%); margin: 0 auto; padding: 34px 24px 72px; }
+    header, .gallery-section { border-bottom: 1px solid var(--line); padding-bottom: 30px; margin-bottom: 30px; }
+    h1 { font-size: clamp(26px, 4vw, 38px); line-height: 1.15; margin: 0 0 10px; letter-spacing: -.025em; }
+    h2 { font-size: 20px; margin: 0 0 16px; }
+    h3 { color: var(--muted); font-size: 11px; font-weight: 750; letter-spacing: .11em; margin: 0 0 10px; text-transform: uppercase; }
+    p { max-width: 78ch; }
+    .eyebrow { color: var(--muted); font: 700 11px/1.4 var(--mono); letter-spacing: .12em; margin-bottom: 14px; text-transform: uppercase; }
+    .lead { color: var(--muted); font-size: 16px; margin: 0; }
+    .meta, .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); margin-top: 18px; }
+    .status { display: inline-block; background: var(--grid); border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: 11px; font-weight: 750; letter-spacing: .07em; padding: 1px 7px; text-transform: uppercase; }
+    .palette { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .swatch { min-height: 98px; padding: 12px; border-right: 1px solid var(--line); }
+    .swatch:last-child { border-right: 0; }
+    .swatch b, .swatch span { display: block; }
+    .swatch span { color: var(--muted); font: 11px/1.4 var(--mono); margin-top: 4px; }
+    .swatch.cat-1 { background: var(--cat-1-fill); border-top: 5px solid var(--cat-1); }
+    .swatch.cat-2 { background: var(--cat-2-fill); border-top: 5px solid var(--cat-2); }
+    .swatch.cat-3 { background: var(--cat-3-fill); border-top: 5px solid var(--cat-3); }
+    .swatch.cat-4 { background: var(--cat-4-fill); border-top: 5px solid var(--cat-4); }
+    .rules { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .rule { background: var(--surface); padding: 14px; }
+    .rule strong { display: block; margin-bottom: 4px; }
+    .rule span { color: var(--muted); font-size: 13px; }
+    .examples { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+    figure { min-width: 0; margin: 0; }
+    figcaption { border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; margin-top: 12px; padding-top: 8px; }
+    .demo-frame { min-height: 250px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; overflow-x: auto; }
+    .demo-frame.tall { min-height: 340px; }
+    .demo-title { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; margin-bottom: 12px; }
+    .demo-title h3 { color: var(--ink); margin: 0; }
+    .demo-title code { color: var(--muted); }
+    .architecture { display: grid; grid-template-columns: minmax(0,1fr) 28px minmax(0,1.2fr) 28px minmax(0,1fr); align-items: stretch; }
+    .track { min-width: 0; border-left: 3px solid var(--cat); padding: 10px; background: var(--surface); }
+    .track > h3 { color: var(--cat); }
+    .track-1 { --cat: var(--cat-1); --cat-fill: var(--cat-1-fill); }
+    .track-2 { --cat: var(--cat-2); --cat-fill: var(--cat-2-fill); }
+    .track-3 { --cat: var(--cat-4); --cat-fill: var(--cat-4-fill); }
+    .track-arrow { display: grid; place-items: center; color: var(--muted); font-size: 20px; }
+    .module { background: var(--cat-fill, transparent); border: 1px solid var(--line); border-left: 4px solid var(--cat, var(--line)); border-radius: var(--radius); margin: 8px 0; padding: 9px; }
+    .module > strong, .module > span { display: block; overflow-wrap: anywhere; }
+    .module > span { color: var(--muted); font-size: 12px; margin-top: 3px; }
+    .flow { list-style: none; margin: 0; padding: 0; --cat: var(--cat-1); }
+    .flow-step { display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 10px; position: relative; padding-bottom: 12px; }
+    .flow-step:not(:last-child)::after { content: ""; position: absolute; left: 16px; top: 32px; bottom: 0; border-left: 2px solid var(--line); }
+    .step-number { width: 34px; height: 34px; display: grid; place-items: center; border: 2px solid var(--cat); border-radius: 50%; background: var(--surface); font-weight: 700; }
+    .flow-step > div { border-bottom: 1px solid var(--line); padding: 5px 0 12px; }
+    .flow-step strong, .flow-step small { display: block; }
+    .flow-step small { color: var(--muted); }
+    .impact-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .impact-band { --cat: var(--cat-1); min-width: 0; border: 1px solid var(--line); border-left: 3px solid var(--cat); padding: 10px; }
+    .impact-band:nth-child(2) { --cat: var(--cat-2); }
+    .impact-band:nth-child(3) { --cat: var(--cat-3); }
+    .impact-band:nth-child(4) { --cat: var(--cat-4); }
+    .impact-band h3 { color: var(--cat); }
+    .impact-band p { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+    .sequence { overflow-x: auto; }
+    .seq-participants { display: grid; grid-template-columns: repeat(3, minmax(110px, 1fr)); gap: 8px; }
+    .seq-participant { border-bottom: 3px solid var(--muted); font-weight: 700; padding: 6px 4px; }
+    .seq-message { display: grid; grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1.2fr); gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+    .seq-num { width: 24px; height: 24px; display: grid; place-items: center; border: 2px solid var(--line); border-radius: 50%; font-size: 11px; }
+    .seq-label { color: var(--muted); font-size: 12px; }
+    .verdict { border: 1px solid var(--line); border-left: 4px solid var(--line); margin-bottom: 9px; padding: 10px; }
+    .verdict strong, .verdict span { display: block; }
+    .verdict span { color: var(--muted); font-size: 12px; }
+    .verdict.confirmed { border-left-color: var(--green); background: var(--green-fill); }
+    .verdict.unresolved { border-left-color: var(--amber); background: var(--amber-fill); }
+    .verdict.contradicted { border-left-color: var(--red); background: var(--red-fill); }
+    .mass { display: grid; grid-template-columns: repeat(2, minmax(130px, 1fr)); gap: 18px; align-items: end; }
+    .mass figure { margin: 0; }
+    .mass .iface, .mass .impl { display: grid; place-items: center; border: 1px solid var(--line); font-size: 12px; }
+    .mass .iface { background: var(--cat-1-fill); border-left: 4px solid var(--cat-1); border-bottom: 0; border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+    .mass .impl { background: var(--grid); border-left: 4px solid var(--line); border-radius: 0 0 var(--radius-sm) var(--radius-sm); color: var(--muted); height: 112px; }
+    .mass .h-lg { height: 72px; }
+    .mass .h-sm { height: 28px; }
+    .inline-map svg { display: block; min-width: 560px; }
+    .mermaid { min-width: 520px; text-align: center; }
+    .mermaid svg { max-width: 100%; height: auto; }
+    .full { grid-column: 1 / -1; }
+    @media (max-width: 800px) {
+      main { padding: 22px 14px 52px; }
+      .palette, .rules, .examples { grid-template-columns: 1fr; }
+      .swatch { border-right: 0; border-bottom: 1px solid var(--line); }
+      .architecture { grid-template-columns: 1fr; gap: 6px; }
+      .track-arrow { transform: rotate(90deg); height: 20px; }
+      .impact-grid { grid-template-columns: 1fr; }
+      .seq-message { grid-template-columns: 26px minmax(0, 1fr); }
+      .seq-label { grid-column: 2; }
+      .full { grid-column: auto; }
+    }
+  </style>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs";
+    var css = getComputedStyle(document.documentElement);
+    var v = function (name) { return css.getPropertyValue(name).trim(); };
+    mermaid.initialize({
+        startOnLoad: true,
+        securityLevel: 'strict',
+        theme: 'base',
+        fontFamily: v('--mono'),
+        themeVariables: {
+          darkMode: matchMedia('(prefers-color-scheme: dark)').matches,
+          background: v('--surface'),
+          primaryColor: v('--surface'),
+          primaryTextColor: v('--ink'),
+          primaryBorderColor: v('--line'),
+          secondaryColor: v('--grid'),
+          tertiaryColor: v('--bg'),
+          textColor: v('--ink'),
+          lineColor: v('--muted'),
+          edgeLabelBackground: v('--surface'),
+          clusterBkg: v('--grid'),
+          clusterBorder: v('--line'),
+          actorBkg: v('--surface'),
+          actorBorder: v('--line'),
+          actorTextColor: v('--ink'),
+          signalColor: v('--muted'),
+          signalTextColor: v('--ink'),
+          noteBkgColor: v('--grid'),
+          noteTextColor: v('--ink'),
+          stateBkg: v('--surface'),
+          stateBorder: v('--line'),
+          compositeBackground: v('--grid'),
+          compositeBorder: v('--line'),
+          altBackground: v('--grid'),
+          transitionColor: v('--muted'),
+          transitionLabelColor: v('--ink'),
+          attributeBackgroundColorOdd: v('--surface'),
+          attributeBackgroundColorEven: v('--grid'),
+          sectionBkgColor: v('--grid'),
+          altSectionBkgColor: v('--surface'),
+          taskBkgColor: v('--grid'),
+          taskBorderColor: v('--line'),
+          taskTextColor: v('--ink'),
+          taskTextOutsideColor: v('--muted'),
+          taskTextDarkColor: v('--ink'),
+          activeTaskBkgColor: v('--cat-1-fill'),
+          activeTaskBorderColor: v('--cat-1'),
+          doneTaskBkgColor: v('--surface'),
+          doneTaskBorderColor: v('--line'),
+          critBkgColor: v('--red-fill'),
+          critBorderColor: v('--red'),
+          todayLineColor: v('--amber'),
+          gridColor: v('--line'),
+          git0: v('--cat-1'),
+          git1: v('--cat-2'),
+          git2: v('--cat-3'),
+          git3: v('--cat-4'),
+          git4: v('--grid'),
+          git5: v('--grid'),
+          git6: v('--grid'),
+          git7: v('--grid'),
+          fillType0: v('--red-fill'),
+          fillType1: v('--amber-fill'),
+          fillType2: v('--green-fill'),
+          fillType3: v('--blue-fill'),
+          fontSize: '13px'
+        }
+      });
+  </script>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">Style preview · v3</div>
+      <h1>明亮一点，仍然克制</h1>
+      <p class="lead">保持干净的冷白与墨蓝背景，进一步提亮天青蓝和蜂蜜琥珀，让冷暖色形成更清楚的对比，同时维持低面积柔和填充。</p>
+      <div class="meta">
+        <span>自动跟随系统深浅模式</span>
+        <span>Mermaid 11 · 固定版本 · strict</span>
+        <span>图关系优先 Mermaid · 编辑型图形优先 CSS / SVG</span>
+      </div>
+    </header>
+
+    <section class="gallery-section">
+      <h2>显式样式约束</h2>
+      <div class="rules">
+        <div class="rule"><strong>背景层级</strong><span>冷白蓝灰画布 → 纯净纸面 → 淡蓝灰凹层；深色使用墨蓝，不使用灰绿黑。</span></div>
+        <div class="rule"><strong>分类配色</strong><span>仅从 4 个清亮柔和色槽按顺序取色；同一区域始终同色。</span></div>
+        <div class="rule"><strong>Mermaid 分工</strong><span>调用图、依赖图、时序图优先使用；质量块、横截面与固定布局交给 CSS / SVG。</span></div>
+        <div class="rule"><strong>红色预算</strong><span>单图最多一个红色强调组；普通提醒优先使用琥珀色。</span></div>
+      </div>
+    </section>
+
+    <section class="gallery-section">
+      <h2>图内允许的分类色范围</h2>
+      <div class="palette" aria-label="四槽分类色板">
+        <div class="swatch cat-1"><b>01 · 天青蓝</b><span>入口 / 第一轨 / 主流程</span></div>
+        <div class="swatch cat-2"><b>02 · 鸢尾紫</b><span>核心行为 / 第二轨</span></div>
+        <div class="swatch cat-3"><b>03 · 蜂蜜琥珀</b><span>第三分区 / 影响带</span></div>
+        <div class="swatch cat-4"><b>04 · 湖水青</b><span>状态 / 外部效果 / 第四轨</span></div>
+      </div>
+    </section>
+
+    <section class="gallery-section">
+      <h2>CSS / SVG 图形</h2>
+      <div class="examples">
+        <figure class="full">
+          <div class="demo-frame">
+            <div class="demo-title"><h3>Architecture · 固定轨道</h3><code>category 1–3</code></div>
+            <div class="architecture" aria-label="架构轨道图">
+              <section class="track track-1"><h3>Entry</h3><div class="module"><strong>HTTP adapter</strong><span>注册路由并规范化输入</span></div></section>
+              <div class="track-arrow" aria-hidden="true">→</div>
+              <section class="track track-2"><h3>Core behavior</h3><div class="module"><strong>Order intake</strong><span>validate · price · commit</span></div><div class="module"><strong>Pricing</strong><span>返回报价</span></div></section>
+              <div class="track-arrow" aria-hidden="true">→</div>
+              <section class="track track-3"><h3>State</h3><div class="module"><strong>Order store</strong><span>持久化已提交订单</span></div></section>
+            </div>
+          </div>
+          <figcaption>位置表达角色，颜色只表达轨道；同一轨内不为模块重复选色。</figcaption>
+        </figure>
+
+        <figure>
+          <div class="demo-frame">
+            <div class="demo-title"><h3>Flow · 有序轨道</h3><code>category 1 only</code></div>
+            <ol class="flow">
+              <li class="flow-step"><span class="step-number">1</span><div><strong>Register</strong><small>绑定入口与依赖</small></div></li>
+              <li class="flow-step"><span class="step-number">2</span><div><strong>Validate</strong><small>检查请求边界</small></div></li>
+              <li class="flow-step"><span class="step-number">3</span><div><strong>Commit</strong><small>写入并发布结果</small></div></li>
+            </ol>
+          </div>
+          <figcaption>整条流程只使用一个分类色，序号和 DOM 顺序承担主要信息。</figcaption>
+        </figure>
+
+        <figure>
+          <div class="demo-frame">
+            <div class="demo-title"><h3>Sequence · 参与者生命线</h3><code>neutral only</code></div>
+            <div class="sequence">
+              <div class="seq-participants"><div class="seq-participant">HTTP adapter</div><div class="seq-participant">Order intake</div><div class="seq-participant">Pricing</div></div>
+              <div class="seq-message"><span class="seq-num">1</span><span>HTTP adapter → Order intake</span><span class="seq-label"><code>submit(cart)</code> · validate</span></div>
+              <div class="seq-message"><span class="seq-num">2</span><span>Order intake → Pricing</span><span class="seq-label"><code>price(cart)</code> · returns quote</span></div>
+              <div class="seq-message"><span class="seq-num">3</span><span>Pricing → Order intake</span><span class="seq-label">quote · commit</span></div>
+            </div>
+          </div>
+          <figcaption>中性线条与文本完成表达，不为参与者添加装饰色。</figcaption>
+        </figure>
+
+        <figure class="full">
+          <div class="demo-frame">
+            <div class="demo-title"><h3>Impact · 影响带</h3><code>category 1–4</code></div>
+            <div class="impact-grid">
+              <section class="impact-band"><h3>Direct</h3><strong>Order intake</strong><p>直接读取状态<br><span class="status">Strong</span></p></section>
+              <section class="impact-band"><h3>Indirect</h3><strong>Invoice job</strong><p>消费已提交事件<br><span class="status">Source</span></p></section>
+              <section class="impact-band"><h3>Validate</h3><strong>Retry worker</strong><p>需聚焦检查<br><span class="status">Explore</span></p></section>
+              <section class="impact-band"><h3>No evidence</h3><strong>Archive</strong><p>尚无支持证据<br><span class="status">Speculative</span></p></section>
+            </div>
+          </div>
+          <figcaption>四个位置固定映射四个色槽；状态标签保持中性，避免类别色和证据色混用。</figcaption>
+        </figure>
+
+        <figure>
+          <div class="demo-frame">
+            <div class="demo-title"><h3>Verification · 结论行</h3><code>evidence only</code></div>
+            <div class="verdict contradicted"><strong>并非所有写入都经过 Store</strong><span><span class="status">Contradicted</span> rebuild 路径直接写入</span></div>
+            <div class="verdict unresolved"><strong>重试是否保序仍未知</strong><span><span class="status">Unresolved</span> 需要运行时检查</span></div>
+            <div class="verdict confirmed"><strong>主路径在提交后发布事件</strong><span><span class="status">Confirmed</span> 来源与测试一致</span></div>
+          </div>
+          <figcaption>红色只用于最高优先级矛盾；普通未知保持琥珀色。</figcaption>
+        </figure>
+
+        <figure>
+          <div class="demo-frame">
+            <div class="demo-title"><h3>Interface depth · 质量块</h3><code>category 1 + neutral</code></div>
+            <div class="mass">
+              <figure><div class="iface h-lg">caller knowledge</div><div class="impl">implementation</div><figcaption>Before · shallow</figcaption></figure>
+              <figure><div class="iface h-sm">interface</div><div class="impl">implementation</div><figcaption>After · deep</figcaption></figure>
+            </div>
+          </div>
+          <figcaption>接口统一使用第一个分类色，实施体保持中性；高度只表达调用者知识负担。</figcaption>
+        </figure>
+
+        <figure class="full">
+          <div class="demo-frame inline-map">
+            <div class="demo-title"><h3>Inline SVG · 拓扑异常</h3><code>neutral + one red finding</code></div>
+            <svg viewBox="0 0 860 205" width="100%" role="img" aria-label="一条泄漏边的拓扑图">
+              <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--muted)"/></marker><marker id="red-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--red)"/></marker></defs>
+              <path d="M 190 70 H 330" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#arrow)"/>
+              <path d="M 520 70 H 660" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#arrow)"/>
+              <path d="M 755 110 V 165 H 425 V 112" fill="none" stroke="var(--red)" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#red-arrow)"/>
+              <g fill="var(--surface)" stroke="var(--line)" stroke-width="2"><rect x="25" y="30" width="165" height="80" rx="8"/><rect x="330" y="30" width="190" height="80" rx="8"/><rect x="660" y="30" width="175" height="80" rx="8"/></g>
+              <g fill="var(--ink)" font-family="var(--mono)" font-size="14" text-anchor="middle"><text x="107" y="64">HTTP adapter</text><text x="107" y="86" fill="var(--muted)">entry</text><text x="425" y="64">Order intake</text><text x="425" y="86" fill="var(--muted)">core</text><text x="747" y="64">Pricing</text><text x="747" y="86" fill="var(--muted)">quote</text><text x="590" y="188" fill="var(--red)">leak: bypasses intake</text></g>
+            </svg>
+          </div>
+          <figcaption>节点全部中性，唯一红边就是报告要读者注意的发现。</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="gallery-section">
+      <h2>Mermaid 允许类型</h2>
+      <div class="examples">
+        <figure>
+          <div class="demo-frame tall"><div class="demo-title"><h3>Flowchart / Graph + Subgraph</h3><code>neutral + one finding</code></div><pre class="mermaid">
+flowchart LR
+  subgraph Entry
+    HTTP[HTTP adapter]
+  end
+  subgraph Core
+    Intake[Order intake]
+    Price[Pricing]
+  end
+  HTTP --> Intake --> Price
+  Price -.->|leak| Intake
+  linkStyle 2 stroke:#a85b54,color:#a85b54
+          </pre></div>
+          <figcaption>自由连接、分支或子图；节点中性，仅异常边带受控红色。</figcaption>
+        </figure>
+
+        <figure>
+          <div class="demo-frame tall"><div class="demo-title"><h3>Sequence Diagram</h3><code>neutral only</code></div><pre class="mermaid">
+sequenceDiagram
+  participant HTTP as HTTP adapter
+  participant Intake as Order intake
+  participant Pricing
+  HTTP->>Intake: submit(cart) · validate
+  activate Intake
+  Intake->>Pricing: price(cart) · execute
+  Pricing-->>Intake: quote · return
+  alt valid quote
+    Intake->>Intake: commit(order)
+  else rejected
+    Intake-->>HTTP: validation error
+  end
+  deactivate Intake
+          </pre></div>
+          <figcaption>出现激活区、alt / opt / loop 或复杂生命线时使用。</figcaption>
+        </figure>
+
+        <figure>
+          <div class="demo-frame tall"><div class="demo-title"><h3>State Diagram</h3><code>neutral only</code></div><pre class="mermaid">
+stateDiagram-v2
+  [*] --> Draft
+  Draft --> Validating: submit
+  Validating --> Committed: valid
+  Validating --> Rejected: invalid
+  Rejected --> Draft: revise
+  Committed --> [*]
+          </pre></div>
+          <figcaption>状态与转移是核心发现时使用，不给状态随意分配颜色。</figcaption>
+        </figure>
+
+        <figure>
+          <div class="demo-frame tall"><div class="demo-title"><h3>Class Diagram</h3><code>neutral only</code></div><pre class="mermaid">
+classDiagram
+  class OrderIntake {
+    +submit(cart) Order
+    -validate(cart)
+    -commit(order)
+  }
+  class Pricing {
+    +price(cart) Quote
+  }
+  class OrderStore {
+    +save(order)
+  }
+  OrderIntake --> Pricing : requests quote
+  OrderIntake --> OrderStore : persists
+          </pre></div>
+          <figcaption>显示接口与静态关系；证据精度仍由关系表承担。</figcaption>
+        </figure>
+
+        <figure>
+          <div class="demo-frame tall"><div class="demo-title"><h3>ER Diagram</h3><code>neutral only</code></div><pre class="mermaid">
+erDiagram
+  ORDER ||--|{ ORDER_LINE : contains
+  ORDER ||--o| PAYMENT : settles
+  ORDER {
+    string id PK
+    string status
+  }
+  ORDER_LINE {
+    string sku
+    int quantity
+  }
+  PAYMENT {
+    string provider_ref
+    string state
+  }
+          </pre></div>
+          <figcaption>存储形状与基数关系；属性行只在两个中性背景间交替。</figcaption>
+        </figure>
+
+        <figure>
+          <div class="demo-frame tall"><div class="demo-title"><h3>Block Diagram</h3><code>category 1–4</code></div><pre class="mermaid">
+block-beta
+  columns 4
+  Entry["Entry"] Core["Core behavior"] State["State"] Effects["Effects"]
+  Entry --> Core
+  Core --> State
+  State --> Effects
+          </pre></div>
+          <figcaption>强调分区块而非证据状态；最多四块，并按色槽顺序选择。</figcaption>
+        </figure>
+
+        <figure>
+          <div class="demo-frame tall"><div class="demo-title"><h3>Timeline</h3><code>neutral only</code></div><pre class="mermaid">
+timeline
+  title Investigation arc
+  Baseline : Pin revision
+  Question : Frame one reading question
+  Investigate : Read bounded slices
+  Verify : Check from another direction
+  Report : Render findings
+          </pre></div>
+          <figcaption>时间或阶段顺序已经表达信息，因此保持完全中性。</figcaption>
+        </figure>
+
+        <figure>
+          <div class="demo-frame tall"><div class="demo-title"><h3>Mindmap</h3><code>category 1–4</code></div><pre class="mermaid">
+mindmap
+  root((Codebase Lens))
+    Orient
+      Entry points
+      Core modules
+    Trace
+      Calls
+      Effects
+    Impact
+      Callers
+      Checks
+    Verify
+      Claims
+      Evidence
+          </pre></div>
+          <figcaption>颜色只区分顶层分支，深层节点回归中性。</figcaption>
+        </figure>
+
+        <figure>
+          <div class="demo-frame tall"><div class="demo-title"><h3>Journey</h3><code>evidence range</code></div><pre class="mermaid">
+journey
+  title Confidence through investigation
+  section Initial model
+    Guess architecture: 2: Agent
+    Identify landmarks: 3: Agent
+  section Evidence
+    Trace representative flow: 4: Agent
+    Verify independently: 5: Agent
+          </pre></div>
+          <figcaption>分数是一种判断，颜色按证据等级使用，不按参与者装饰。</figcaption>
+        </figure>
+
+        <figure>
+          <div class="demo-frame tall"><div class="demo-title"><h3>Gantt</h3><code>neutral + restrained alerts</code></div><pre class="mermaid">
+gantt
+  title Bounded investigation
+  dateFormat YYYY-MM-DD
+  axisFormat %m-%d
+  section Reading
+  Baseline           :done, base, 2026-09-01, 1d
+  Trace path         :active, trace, after base, 2d
+  section Verification
+  Resolve contradiction :crit, verify, after trace, 1d
+  Render report      :report, after verify, 1d
+          </pre></div>
+          <figcaption>普通任务中性；红只给 critical，琥珀只给 today / 待处理节点。</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <footer>
+      <p class="lead">这一版重点看整体气质、背景层级、四槽分类色和红色克制度。确认方向后，再把约束写回正式模板。</p>
+    </footer>
+  </main>
+</body>
+</html>

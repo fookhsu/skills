@@ -297,7 +297,9 @@ The report summarizes the answer and links to both Markdown artifacts. Visuals a
 - `DIRECT`, `INDIRECT`, `VALIDATE`, and `NO EVIDENCE` bands for `IMPACT`;
 - contradiction-first verdict rows for `VERIFY`.
 
-Flowcharts, architecture diagrams, and sequence diagrams may also be authored in Mermaid and rendered client-side from a pinned runtime; sequence diagrams label participants and messages with domain concepts and key-function lifecycles. Pure CSS patterns remain available for simple structure and offline fallback.
+Graph-shaped relationships may also be authored in Mermaid and rendered client-side from a pinned runtime; sequence diagrams label participants and messages with domain concepts and key-function lifecycles. Fixed tracks, impact bands, mass diagrams, and other editorial visuals use CSS or inline SVG when exact geometry communicates the finding better.
+
+Open [`HTML-REPORT-PREVIEW.html`](skills/codebase-lens/references/HTML-REPORT-PREVIEW.html) to inspect the complete light/dark palette, explicit color constraints, and examples of every supported CSS, SVG, and Mermaid diagram type.
 
 Every named source symbol is a clickable link pinned to the investigated revision when the repository host supports it. A verified local-file link with visible path and line range is used otherwise.
 
@@ -320,6 +322,7 @@ skills/codebase-lens/
     ├── DEMO.md
     ├── DOMAIN-CONCEPTS.md
     ├── HTML-REPORT.md
+    ├── HTML-REPORT-PREVIEW.html
     └── INVESTIGATION-MAP.md
 ```
 
