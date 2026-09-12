@@ -312,6 +312,8 @@ The demo is evidence, not production completion. Its result states what the expe
 ```text
 skills/codebase-lens/
 ├── SKILL.md
+├── agents/
+│   └── openai.yaml
 └── references/
     ├── ARCHITECTURE.md
     ├── CODE-READING.md

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Codebase Lens"
+  short_description: "Read unfamiliar codebases with evidence, not guesses."
+  default_prompt: "Use $codebase-lens to build an evidence-backed map of how this repository works and where to start reading."
+
+policy:
+  allow_implicit_invocation: false

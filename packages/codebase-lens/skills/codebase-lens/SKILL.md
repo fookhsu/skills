@@ -1,6 +1,6 @@
 ---
 name: codebase-lens
-description: Read unfamiliar codebases with evidence instead of guessing. Builds a resumable investigation map, traces behavior through modules, records domain concepts separately, analyzes change impact, and renders a self-contained HTML architecture and flow report with linked source symbols and bounded reading budgets. Use when the user asks to understand a repository, onboard onto a codebase, trace how a request, command, job, or page works, assess what a change could affect, or verify an architecture claim.
+description: Evidence-backed codebase reading: a resumable investigation map, read/unread coverage, separate domain concepts, linked source symbols, architecture and flow maps, impact analysis, and a self-contained HTML report.
 license: MIT
 disable-model-invocation: true
 ---
