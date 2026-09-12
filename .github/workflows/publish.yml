@@ -54,9 +54,13 @@ jobs:
             echo "OIDC endpoint missing (bad)"
           fi
 
+      # npm's OIDC exchange misresolves nested workspace packages, so
+      # `npm publish --workspace` falls back to token auth and fails with
+      # ENEEDAUTH. Pack the package, then publish the tarball from outside
+      # the workspace so npm resolves the package identity from the tarball.
       - name: Pack the package
         run: npm pack --workspace packages/codebase-lens --pack-destination "$RUNNER_TEMP"
 
       - name: Publish to npm
         working-directory: ${{ runner.temp }}
-        run: npm publish codebase-lens-*.tgz --loglevel verbose
+        run: npm publish codebase-lens-*.tgz
