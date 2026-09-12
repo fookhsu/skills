@@ -54,6 +54,31 @@ skills/
 npm run validate
 ```
 
+## CI/CD
+
+GitHub Actions runs `npm run validate` on every push to `main` and on every pull request (`.github/workflows/ci.yml`).
+
+Publishing to npm (`.github/workflows/publish.yml`) runs when a tag matching `v*` is pushed, or manually via the **Publish** workflow's *Run workflow* button. The tag must match `packages/codebase-lens/package.json`'s `version` (for example, tag `v1.2.3` for version `1.2.3`).
+
+The publish job uses npm **trusted publishing** (OIDC), so no `NPM_TOKEN` secret is needed. Configure the trusted publisher once at `https://www.npmjs.com/package/codebase-lens/access` → **Trusted publishing** → GitHub Actions, using exactly these values:
+
+| Field | Value |
+|---|---|
+| Repository | `fookhsu/skills` |
+| Workflow filename | `publish.yml` |
+| Environment | leave blank |
+
+Then release with:
+
+```bash
+# bump the version without creating a tag yet
+npm version patch -w codebase-lens --no-git-tag-version
+git commit -am "chore(release): codebase-lens $(node -p "require('./packages/codebase-lens/package.json').version")"
+# tag and push; the tag triggers the publish workflow
+git tag "v$(node -p "require('./packages/codebase-lens/package.json').version")"
+git push origin main --follow-tags
+```
+
 ## Add a package
 
 1. Create `packages/<package-name>/`.
