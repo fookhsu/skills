@@ -40,5 +40,23 @@ jobs:
           fi
           echo "Publishing codebase-lens@${PKG_VERSION}"
 
+      - name: Diagnose publish environment
+        run: |
+          echo "npm $(npm --version)"
+          if [ -z "${NODE_AUTH_TOKEN+x}" ]; then
+            echo "NODE_AUTH_TOKEN undefined (good for OIDC)"
+          else
+            echo "NODE_AUTH_TOKEN set (bad for OIDC)"
+          fi
+          if [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            echo "OIDC endpoint present (good)"
+          else
+            echo "OIDC endpoint missing (bad)"
+          fi
+
+      - name: Pack the package
+        run: npm pack --workspace packages/codebase-lens --pack-destination "$RUNNER_TEMP"
+
       - name: Publish to npm
-        run: npm publish --workspace packages/codebase-lens
+        working-directory: ${{ runner.temp }}
+        run: npm publish codebase-lens-*.tgz --loglevel verbose
