@@ -14,7 +14,7 @@ The investigation arc is iterative:
 ```text
 baseline → question → landmarks
          → [select slice → investigate through active mode/lens → update maps]*
-         → module map → independent verification → HTML report → optional demo
+         → module map → independent verification → report draft → HTML report (on request) → optional demo
 ```
 
 The arc is the workflow position. A mode is the user's investigative intent. A lens is the perspective currently applied inside a stage. Record all three in `investigation-map.md` so a user can see and control the current position.
@@ -47,15 +47,17 @@ Arguments are a natural-language control contract appended to the invocation —
 | `slice-files` | positive integer; `8` by default | Maximum candidate files in one reading slice |
 | `slice-lines` | integer from `1` to `1000`; `400` by default | Maximum aggregate source lines in one reading slice |
 | `max-slices` | positive integer or `auto`; `3` by default | Invocation-level reading bound |
-| `stop-after` | `BASELINE`, `QUESTION`, `LANDMARKS`, `INVESTIGATE`, `MODULE_MAP`, `VERIFY`, or `REPORT`; `REPORT` by default | Requested workflow checkpoint |
+| `stop-after` | `BASELINE`, `QUESTION`, `LANDMARKS`, `INVESTIGATE`, `MODULE_MAP`, `VERIFY`, `DRAFT`, or `REPORT`; `DRAFT` by default | Requested workflow checkpoint |
 | `include` | comma-separated paths or globs; none by default | Explicitly admitted source |
 | `exclude` | comma-separated paths or globs; generated/vendor/build defaults still apply | Explicitly skipped source |
-| `open` | `true` or `false`; `true` by default for HTML | Whether to open the final report |
+| `open` | `true` or `false`; `true` by default when rendering HTML | Whether to open the report after rendering it |
 | `demo` | `skip`, `isolated`, or `in-place`; `skip` until the demo contract is approved | Preferred demo disposition, not pre-approval |
 
 `include` and `exclude` first constrain `scope`; slice budgets then bound each reading unit. `max-slices` is a hard invocation stop: when reached before `stop-after`, update the map and return progress without pretending the later stage completed. `resume` controls the starting position, and the demo approval gate always remains last.
 
-Read [references/INVESTIGATION-MAP.md](references/INVESTIGATION-MAP.md) and [references/CODE-READING.md](references/CODE-READING.md) before reconnaissance. Read [references/DOMAIN-CONCEPTS.md](references/DOMAIN-CONCEPTS.md) before recording project terminology. Read [references/ARCHITECTURE.md](references/ARCHITECTURE.md) before drawing or evaluating modules. Read [references/HTML-REPORT.md](references/HTML-REPORT.md) before choosing an artifact workspace or rendering a report. Read [references/DEMO.md](references/DEMO.md) only after the user requests or accepts a demo proposal.
+`DRAFT` is the default checkpoint: the investigation records its findings in `report-draft.md`, then stops and asks whether to render the HTML report. HTML is rendered only on `stop-after=REPORT` or an affirmative answer to that prompt; it is never rendered silently.
+
+Read [references/INVESTIGATION-MAP.md](references/INVESTIGATION-MAP.md) and [references/CODE-READING.md](references/CODE-READING.md) before reconnaissance. Read [references/DOMAIN-CONCEPTS.md](references/DOMAIN-CONCEPTS.md) before recording project terminology. Read [references/ARCHITECTURE.md](references/ARCHITECTURE.md) before drawing or evaluating modules. Read [references/HTML-REPORT.md](references/HTML-REPORT.md) before choosing an artifact workspace, writing a report draft, or rendering a report. Read [references/DEMO.md](references/DEMO.md) only after the user requests or accepts a demo proposal.
 
 ## Artifacts
 
@@ -65,10 +67,11 @@ A file-producing investigation uses one artifact workspace with separate respons
 <artifact-workspace>/          # default: <current-directory>/docs/codebase-lens/
 ├── investigation-map.md  # stage, mode, lens, read/unread coverage, frontier
 ├── domain-concepts.md    # canonical domain language and linked evidence
-└── report.html           # final human-facing answer
+├── report-draft.md       # report content in one editable source (front-matter + sections)
+└── report.html           # deterministic projection of the draft + fixed scaffold
 ```
 
-The investigation map is authoritative for workflow position and coverage. The domain-concepts document is authoritative for terminology. The report summarizes and links both; it does not duplicate either document.
+The investigation map is authoritative for workflow position and coverage. The domain-concepts document is authoritative for terminology. The report draft is the single source of truth for report content; the HTML report is a deterministic projection of the draft and never re-authors content.
 
 Every named source symbol in generated artifacts must be a clickable, revision-pinned source link when the repository host supports it, with a verified local-file fallback. No generated file may exceed 1,000 physical lines. Follow the compaction and sharding rules in the references.
 
@@ -82,6 +85,7 @@ Every named source symbol in generated artifacts must be a clickable, revision-p
 - Use adaptive coverage rather than enumerating a large repository file by file. Coarse unread rows remain explicit.
 - A source file over 1,000 lines is a container: index it, then read bounded symbols or ranges. Never mark the whole file `READ` after inspecting only selected functions.
 - Choose one output branch: the default `docs` artifact workspace (`docs/codebase-lens/` under the current directory), a `temp` directory, response-only with no files, or one user-approved durable workspace. Writing investigation artifacts is not approval to edit project source.
+- Record findings in `report-draft.md` and stop at the `DRAFT` checkpoint by default, then ask whether to render the HTML report. Render `report.html` only on an explicit request or `stop-after=REPORT`; never render silently.
 - Source edits require the demo gate in [references/DEMO.md](references/DEMO.md). An invitation or `demo` preference is not approval.
 - Respond and write artifacts in the user's language unless the project has a documented language convention.
 
@@ -148,15 +152,23 @@ Set the map stage to `VERIFY` and active lens to `evidence`. A blocked, skipped,
 
 **Complete when:** each key conclusion is confirmed, contradicted, or explicitly unresolved; coverage and the frontier reflect verification work; and the map advances or records `stop-after=VERIFY`.
 
-### 7. Render the HTML report
+### 7. Write the report draft
 
-Follow [references/HTML-REPORT.md](references/HTML-REPORT.md). Use the selected mode's stable visual, a relationship evidence table, verified source links, a compact reading-coverage summary linked to `investigation-map.md`, and a compact vocabulary summary linked to `domain-concepts.md`.
+Write `report-draft.md` following the draft contract in [references/HTML-REPORT.md](references/HTML-REPORT.md): front-matter carrying the mode, lens, and primary-visual intent, then the content sections the selected mode requires — direct answer, coverage summary, primary-visual spec, relationship evidence, module details, domain summary, reading path or checks, and unknowns/frontier. Store diagrams as a spec (a fenced Mermaid source block or a compact structured list), never as rendered HTML or SVG. Use verified source links and a compact vocabulary summary linked to `domain-concepts.md`.
 
-Set the map stage to `REPORT`, render and validate `report.html`, then update the map with the report link and terminal or resumable state. Return a concise direct answer, important unknowns, coverage status, and absolute paths for every produced artifact. For response-only, confirm no files were created and include compact position and coverage in chat.
+Set the map stage to `DRAFT` and update the map's report links. Then stop and return the direct answer, important unknowns, coverage status, and absolute paths, and explicitly offer to render the HTML report. For response-only, skip the draft and confirm no files were created, returning compact position and coverage in chat.
+
+**Complete when:** the draft holds every content section the selected mode requires in the required shape with verified links, is below 1,000 lines, is a sufficient input for rendering, and the map marks `DRAFT` with the draft link and either `stop-after=DRAFT` or an unanswered render prompt.
+
+### 8. Render the HTML report
+
+Run this step only on an explicit request — `stop-after=REPORT` or the user's affirmative answer to the draft prompt. Render `report.html` as a deterministic projection of `report-draft.md` plus the fixed scaffold in [references/HTML-REPORT.md](references/HTML-REPORT.md); do not re-author or re-derive content. Apply the selected mode's stable visual, a relationship evidence table, verified source links, a compact reading-coverage summary linked to `investigation-map.md`, and a compact vocabulary summary linked to `domain-concepts.md`.
+
+Set the map stage to `REPORT`, render and validate `report.html`, then update the map with the report link, render timestamp, and terminal or resumable state. Return a concise direct answer, important unknowns, coverage status, and absolute paths for every produced artifact. Re-rendering the same draft must reproduce the same HTML; if the draft changed after a render, record the HTML as `STALE` in the map until re-rendered.
 
 **Complete when:** each generated file is below 1,000 lines, every named source symbol is linked, the report passes HTML checks and opens or reports the open failure, and the map accurately records completion or the next frontier.
 
-### 8. Offer the optional demo
+### 9. Offer the optional demo
 
 Offer a demo only when one bounded executable experiment would resolve an important unknown, validate a proposed interface, or make the traced behavior concrete. Present the contract required by [references/DEMO.md](references/DEMO.md), then ask for `isolated`, `in-place`, or `skip`. Stop before edits until explicit approval.
 
@@ -166,7 +178,7 @@ Set the map stage to `DEMO` only after approval. Demo source and generated artif
 
 ## Parallel investigation
 
-For a broad repository, use parallel read-only subagents only when scopes are independent. Give each child one non-overlapping frontier slice with repository scope, question, read-only authority, active mode/lens, file and line budgets, source-link requirements, evidence format, and stop condition. Children return evidence and coverage deltas; they do not edit the authoritative map, render final artifacts, or spawn agents. The parent reconciles all deltas and owns the maps and report. For small scopes, investigate directly.
+For a broad repository, use parallel read-only subagents only when scopes are independent. Give each child one non-overlapping frontier slice with repository scope, question, read-only authority, active mode/lens, file and line budgets, source-link requirements, evidence format, and stop condition. Children return evidence and coverage deltas; they do not edit the authoritative map, render final artifacts, or spawn agents. The parent reconciles all deltas and owns the maps, draft, and report. For small scopes, investigate directly.
 
 ## Final check
 
@@ -176,6 +188,7 @@ For a broad repository, use parallel read-only subagents only when scopes are in
 - Every material claim has evidence or an uncertainty label, and static analysis is not called runtime verification.
 - Every named code symbol in generated artifacts has a verified link and visible path/line range.
 - Domain concepts live in the separate domain document; the map and report only link or summarize them.
+- The report draft owns report content; the HTML report is a deterministic projection of it and was rendered only on request.
 - Architecture and domain terms are not conflated.
 - No generated file exceeds 1,000 physical lines; compact or shard before completion.
 - Project source remains unchanged unless the user explicitly approved a demo.

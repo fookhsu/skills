@@ -10,7 +10,7 @@ Offer these dispositions:
 
 - **Isolated demo** — preferred for an experiment. Use a managed worktree when available, or another clearly identified temporary workspace. Keep it inspectable until the user chooses to discard or integrate it.
 - **In-place patch** — use the current worktree only when the user wants a reviewable project change and existing edits can be preserved safely.
-- **Skip** — retain the investigation map, domain concepts, and report without implementation.
+- **Skip** — retain the investigation map, domain concepts, report draft, and report without implementation.
 
 If safe isolation cannot be established, stop and explain the blocker. Do not hide a demo inside the user's current changes.
 

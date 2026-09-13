@@ -14,7 +14,7 @@ The map is a state file, not a narrative report or command log. Keep only the cu
 
 Record all three dimensions because they answer different questions:
 
-- **Stage** — the current workflow position: `BASELINE`, `QUESTION`, `LANDMARKS`, `INVESTIGATE`, `MODULE_MAP`, `VERIFY`, `REPORT`, or `DEMO`.
+- **Stage** — the current workflow position: `BASELINE`, `QUESTION`, `LANDMARKS`, `INVESTIGATE`, `MODULE_MAP`, `VERIFY`, `DRAFT`, `REPORT`, or `DEMO`.
 - **Mode** — the user intent: `ORIENT`, `TRACE`, `IMPACT`, `VERIFY`, or an explicitly approved `DEMO`. Combined modes remain visible in their execution order.
 - **Lens** — the perspective currently applied inside a stage: `behavior`, `module`, `data`, `change`, or `evidence`.
 
@@ -68,7 +68,7 @@ Keep `investigation-map.md` below 1,000 physical lines; target 500 or fewer. Bef
 - collapse completed child rows into a linked parent summary;
 - remove superseded frontier entries;
 - retain only current decisions rather than an append-only history;
-- move explanatory prose to the HTML report;
+- move explanatory prose to the report draft;
 - keep unresolved, `PARTIAL`, `UNREAD`, `QUEUED`, `BLOCKED`, and `STALE` rows explicit.
 
 Never split the current control state across multiple maps. Compact resolved coverage instead.
@@ -89,7 +89,8 @@ Never split the current control state across multiple maps. Compact resolved cov
 - Budget: `slice-files=8; slice-lines=400; max-slices=3`
 - Updated: `<timestamp>`
 - Domain concepts: [domain-concepts.md](domain-concepts.md)
-- Report: pending or [report.html](report.html)
+- Report draft: [report-draft.md](report-draft.md)
+- Report HTML: pending | [report.html](report.html) rendered @ `<timestamp>` | STALE — re-render after draft changes
 
 ## Stage map
 
@@ -98,6 +99,7 @@ Never split the current control state across multiple maps. Compact resolved cov
 | BASELINE | COMPLETE | TRACE | evidence | Revision and existing changes recorded |
 | INVESTIGATE | CURRENT | TRACE | behavior | Following route registration to handler |
 | VERIFY | PENDING | VERIFY | evidence | Reverse trace not started |
+| DRAFT | PENDING | TRACE | behavior | Findings not yet written |
 
 ## Frontier
 

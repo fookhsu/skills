@@ -84,6 +84,10 @@ Continue in the same conversation to refine the question or resume an incomplete
 ```
 
 ```text
+/skill:codebase-lens Render the HTML report from the existing draft.
+```
+
+```text
 /skill:codebase-lens Trace checkout and then propose a small isolated demo if it would resolve an important unknown. Wait for my approval before editing code.
 ```
 
@@ -91,20 +95,21 @@ Continue in the same conversation to refine the question or resume an incomplete
 
 ## What you get
 
-A completed investigation answers the question directly in chat and, by default, creates:
+A completed investigation answers the question directly in chat. By default it records findings in a draft, then asks before rendering HTML:
 
 ```text
 docs/codebase-lens/
 ├── investigation-map.md  # progress, coverage, evidence, and next frontier
 ├── domain-concepts.md    # project terminology with linked evidence
-└── report.html           # human-facing findings and diagrams
+├── report-draft.md       # report content in one editable source
+└── report.html           # rendered from the draft when you ask for it
 ```
 
-The report links named source symbols to verified locations. Large repositories are read in bounded slices, so untouched areas remain explicitly unread instead of disappearing from the result. Ask for a chat-only answer when you do not want files.
+The report links named source symbols to verified locations. Large repositories are read in bounded slices, so untouched areas remain explicitly unread instead of disappearing from the result. Findings accumulate in the draft first; the HTML report is rendered only when you ask for it, so you can switch lenses cheaply before committing to a rendered report. Ask for a chat-only answer when you do not want files.
 
 ## HTML report
 
-The report chooses visuals that match the question: architecture tracks, execution flows, impact bands, verdict rows, Mermaid relationship diagrams, or focused inline SVG. It supports coordinated light and dark themes with constrained category and evidence colors.
+The report chooses visuals that match the question: architecture tracks, execution flows, impact bands, verdict rows, Mermaid relationship diagrams, or focused inline SVG. It supports coordinated light and dark themes with constrained category and evidence colors. It is rendered from `report-draft.md` on request; the draft is where you iterate on findings and perspective before committing to HTML.
 
 Open the human-facing [`HTML-REPORT-PREVIEW.html`](HTML-REPORT-PREVIEW.html) to inspect the complete palette and every supported diagram type. The preview sits outside the skill and is not loaded during skill execution.
 

@@ -1,6 +1,8 @@
-# Artifact workspace and HTML report
+# Artifact workspace, report draft, and HTML report
 
-A file-producing investigation uses one workspace containing a resumable investigation map, a separate domain-concepts document, and the final self-contained HTML report. Chat receives the direct answer, important unknowns, coverage summary, and absolute paths to every produced artifact.
+A file-producing investigation uses one workspace containing a resumable investigation map, a separate domain-concepts document, an editable report draft, and the final self-contained HTML report rendered from that draft. Chat receives the direct answer, important unknowns, coverage summary, and absolute paths to every produced artifact.
+
+The draft is the single source of truth for report content. The HTML report is a deterministic projection of the draft plus a fixed scaffold: rendering never re-authors content, and re-rendering the same draft reproduces the same HTML.
 
 ## Output decision
 
@@ -8,23 +10,24 @@ Choose exactly one branch:
 
 | `workspace` value | File behavior | Resume and open behavior |
 |---|---|---|
-| `docs` (default) | Create or reuse `docs/codebase-lens/` under the current directory, containing `investigation-map.md`, `domain-concepts.md`, and eventually `report.html` | Durable and resumable; open `report.html` unless `open=false` |
-| `temp` | Securely create one fresh OS-temporary directory with the same three files | Resumable while the directory exists; open `report.html` unless `open=false` |
+| `docs` (default) | Create or reuse `docs/codebase-lens/` under the current directory, containing `investigation-map.md`, `domain-concepts.md`, `report-draft.md`, and eventually `report.html` | Durable and resumable; open `report.html` unless `open=false` |
+| `temp` | Securely create one fresh OS-temporary directory with the same files | Resumable while the directory exists; open `report.html` unless `open=false` |
 | `response-only` | Write no files | Not resumable from disk; return compact position, coverage, domain terms, and findings in chat |
 | Approved directory | Create or resume artifacts only in that exact directory | Durable and resumable; open `report.html` unless `open=false` |
 
 Writing investigation artifacts under the current directory is a project-file edit: approval covers investigation artifacts only, not source edits. The default `docs` location resolves to `docs/codebase-lens/` and is pre-approved by convention; a custom directory is approved by naming it explicitly. Do not also create a temporary copy unless the user requests both. A `resume=<map-path>` selects the existing map's parent directory and takes precedence over `workspace`.
 
-For `docs` (the default), create or reuse `docs/codebase-lens/` under the current directory using the three canonical filenames:
+For `docs` (the default), create or reuse `docs/codebase-lens/` under the current directory using these canonical filenames:
 
 ```text
 <current-directory>/docs/codebase-lens/
 ├── investigation-map.md
 ├── domain-concepts.md
+├── report-draft.md
 └── report.html
 ```
 
-Never overwrite an unrelated file already in `docs/codebase-lens/`. If the three files already exist from an earlier investigation, resume them instead of clobbering, after verifying the map's repository and revision. Suggest adding `docs/codebase-lens/` to `.gitignore` when these are local working artifacts.
+Never overwrite an unrelated file already in `docs/codebase-lens/`. If the files already exist from an earlier investigation, resume them instead of clobbering, after verifying the map's repository and revision. The draft may exist before the HTML has been rendered. Suggest adding `docs/codebase-lens/` to `.gitignore` when these are local working artifacts.
 
 For `temp`, use the operating system or standard-library temporary-directory facility with a random suffix and exclusive file creation:
 
@@ -32,14 +35,52 @@ For `temp`, use the operating system or standard-library temporary-directory fac
 <tmpdir>/codebase-lens-<repo>-<mode>-<timestamp>-<random>/
 ├── investigation-map.md
 ├── domain-concepts.md
+├── report-draft.md
 └── report.html
 ```
 
 Sanitize `<repo>` and `<mode>` to lowercase ASCII letters, numbers, and hyphens. A suitable implementation uses Node `fs.mkdtemp`, Python `tempfile.mkdtemp`, or an equivalent OS-backed primitive. Create files without overwriting an unrelated artifact; on resume, verify the map's repository and revision before updating it.
 
-Use relative links among the three artifacts so moving a durable workspace preserves navigation. Open only the report, passing its absolute path as one argument to `open` on macOS, `xdg-open` on Linux, or `start`/`Start-Process` on Windows. Use an argument array such as Node `spawn(command, [path])` or Python `subprocess.run([command, path])`; never concatenate a shell command. If opening fails, keep every artifact and state the failure with their absolute paths.
+Use relative links among the artifacts so moving a durable workspace preserves navigation. Open only the report, passing its absolute path as one argument to `open` on macOS, `xdg-open` on Linux, or `start`/`Start-Process` on Windows. Use an argument array such as Node `spawn(command, [path])` or Python `subprocess.run([command, path])`; never concatenate a shell command. If opening fails, keep every artifact and state the failure with their absolute paths.
+
+## Report draft
+
+`report-draft.md` is the editable content source rendered later into `report.html`. It is content-only Markdown: no CSS, no inline SVG, no HTML chrome, and no escaped HTML. Diagrams are stored as a spec — a fenced `mermaid` source block, or a compact structured list naming the pattern and its items — never as rendered markup.
+
+### Front-matter
+
+```yaml
+---
+repository: /absolute/repository/path
+revision: <full revision>
+scope: <investigation scope>
+mode: ORIENT | TRACE | IMPACT | VERIFY
+lens: behavior | module | data | change | evidence
+primary-visual: architecture-tracks | flow-rail | sequence-lifelines | impact-bands | verdict-rows | mass-diagram | mermaid:<type> | inline-svg
+emphasis: <one-line note on the current lens emphasis; optional>
+---
+```
+
+`mode`, `lens`, and `primary-visual` are the presentation intent: changing a lens edits these fields plus the affected sections, never the HTML. HTML staleness is recorded in `investigation-map.md`, not in the draft.
+
+### Sections
+
+Mirror the report structure below, one `##` section each, in order. Include only sections the selected mode needs. The header metadata lives in the front-matter, not a body section.
+
+1. **Direct answer** — one compact statement answering the reading question.
+2. **Workflow and coverage** — stage/mode/lens position, coverage totals, next frontier, link to `investigation-map.md`.
+3. **Primary visual** — the diagram spec, labeled with its pattern (a fenced Mermaid source block, or a structured list of tracks, flow steps, lifelines, bands, verdict rows, or mass figures).
+4. **Relationship evidence** — a Markdown table: source module, relationship, target module, linked paths/symbols, evidence status.
+5. **Module details** — responsibility, interface, hidden implementation, seam, adapters, dependencies, and linked source symbols.
+6. **Domain concepts summary** — only terms required for the answer plus a link to `domain-concepts.md`.
+7. **Reading path or checks** — dependency-ordered paths for `ORIENT`, or focused checks for the other modes.
+8. **Unknowns and frontier** — unresolved facts, deliberately unread scope, and the next highest-value slice.
+
+Keep the draft below 1,000 lines (target 300–400). It stays small because it carries content and no scaffold.
 
 ## Rendering contract
+
+Rendering is a deterministic projection of the draft: read its front-matter and sections, apply the fixed scaffold, and escape every dynamic value. Do not re-author content, and reproduce the same HTML for the same draft.
 
 - Produce valid standalone HTML5 with UTF-8, viewport metadata, and inline CSS; no build step is required to view the artifact.
 - Use semantic HTML, CSS Grid/Flexbox, inline SVG, or client-rendered Mermaid for diagrams. Mermaid is a first-class option across its diagram types, themed from the same token block so it matches the palette and the dark scheme; see "Mermaid diagrams".
@@ -356,7 +397,7 @@ Two rules keep this honest:
 
 ## Report structure
 
-Include only sections useful to the selected mode, in this order:
+These sections are projected from `report-draft.md`: the draft holds the content, this list its rendered form. The HTML header is rendered from the draft's front-matter. Include only sections useful to the selected mode, in this order:
 
 1. **Header** — repository, scope, revision, current stage, selected modes, active lens, controls, generated time, and worktree status.
 2. **Direct answer** — one compact statement that answers the reading question.
@@ -529,7 +570,8 @@ Extend the CSS only for information required by the report. Keep cards at 8px ra
 
 Before opening the report:
 
-- confirm `investigation-map.md`, `domain-concepts.md`, and `report.html` exist and are non-empty for a file-producing investigation;
+- confirm `investigation-map.md`, `domain-concepts.md`, and `report-draft.md` exist and are non-empty for a file-producing investigation, and `report.html` exists and is non-empty once rendering has run;
+- confirm `report.html` faithfully projects `report-draft.md`: the header comes from front-matter, each section maps to its draft section, and no content appears in the HTML that is absent from the draft;
 - confirm each generated file is below 1,000 physical lines;
 - confirm the map and domain document link to each other, and the report links to both with relative paths;
 - check that `<!doctype html>`, `<meta charset>`, viewport metadata, `<title>`, and closing `</html>` exist;
@@ -548,4 +590,4 @@ When browser automation is available, inspect one desktop and one narrow viewpor
 
 ## Completion
 
-A file-producing investigation is complete for the current stop point when all three artifacts satisfy their contracts, the report opens successfully or has a reported open failure, the map contains an honest resumable frontier or terminal state, and every absolute artifact path is returned. Response-only output is complete when no files were created and the concise chat findings include the current stage, mode, lens, coverage, domain terms, direct answer, and next frontier.
+A file-producing investigation is complete for the current stop point when the produced artifacts satisfy their contracts — the draft is complete at the `DRAFT` checkpoint, and the report opens successfully or has a reported open failure once rendering runs — the map contains an honest resumable frontier or terminal state, and every absolute artifact path is returned. Response-only output is complete when no files were created and the concise chat findings include the current stage, mode, lens, coverage, domain terms, direct answer, and next frontier.
