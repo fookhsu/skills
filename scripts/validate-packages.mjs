@@ -146,7 +146,28 @@ async function validateSkills(manifestName, baseDir, skillPaths) {
   return ok;
 }
 
+/** The lockfile repeats every workspace package version. npm ci does not compare
+ *  those copies against package.json, so a stale lockfile passes install and
+ *  reaches publish unless we check it here. */
+function validateLockfileVersion(packagePath, name, version) {
+  const locked = lockfile.packages?.[packagePath];
+
+  if (!locked) {
+    fail(
+      `${name}: package-lock.json has no "${packagePath}" entry — run "npm install --package-lock-only"`,
+    );
+    return;
+  }
+
+  if (locked.version !== version) {
+    fail(
+      `${name}: package.json is ${version} but package-lock.json is ${locked.version ?? "unset"} — run "npm run bump -- <version>" or "npm install --package-lock-only"`,
+    );
+  }
+}
+
 const rootManifest = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+const lockfile = JSON.parse(await readFile(new URL("../package-lock.json", import.meta.url), "utf8"));
 const rootSkills = rootManifest.pi?.skills;
 if (!Array.isArray(rootSkills) || rootSkills.length === 0) {
   fail(`${rootManifest.name}: root package.json must define pi.skills`);
@@ -169,6 +190,8 @@ for (const entry of packageDirs) {
     fail(`${entry.name}: package.json must define name and version`);
     continue;
   }
+
+  validateLockfileVersion(`packages/${entry.name}`, manifest.name, manifest.version);
 
   if (!manifest.keywords?.includes("pi-package")) {
     fail(`${manifest.name}: missing pi-package keyword`);

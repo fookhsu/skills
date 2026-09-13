@@ -28,6 +28,7 @@
   ],
   "scripts": {
     "validate": "node scripts/validate-packages.mjs",
+    "bump": "node scripts/bump-version.mjs",
     "install-skill": "node scripts/install-skill.mjs"
   },
   "pi": {
