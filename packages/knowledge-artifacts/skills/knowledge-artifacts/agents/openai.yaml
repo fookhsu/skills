@@ -1,3 +1,6 @@
 interface:
   display_name: "Knowledge Artifacts"
   short_description: "Artifacts that survive revision and session boundaries"
+
+policy:
+  allow_implicit_invocation: false

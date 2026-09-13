@@ -2,6 +2,7 @@
 name: knowledge-artifacts
 description: "Build knowledge artifacts that survive revision and session boundaries — plans, specs, repo or data analyses, reports. Use when work product must outlive the conversation it was made in, when a document is too long to hold in context, or when an analysis needs to be re-run later without losing human judgment."
 license: MIT
+disable-model-invocation: true
 ---
 
 # Knowledge artifacts
