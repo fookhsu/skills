@@ -1,0 +1,27 @@
+{
+  "modules": {
+    "title": "Module catalog",
+    "itemLabel": "module",
+    "order": ["path", "responsibility", "depth", "hash"],
+    "fields": {
+      "path":           { "label": "Path",           "kind": "text", "required": true, "unique": true },
+      "responsibility": { "label": "Responsibility", "kind": "text", "required": true },
+      "depth":          { "label": "Depth",          "kind": "enum", "options": ["deep", "shallow", "unsure"] },
+      "hash":           { "label": "Content hash",   "kind": "text", "required": true, "hint": "Hash of module content; if it changed, a finding's basis changed" }
+    }
+  },
+  "findings": {
+    "title": "Findings",
+    "itemLabel": "finding",
+    "order": ["id", "module", "polarity", "judgment", "severity", "reason", "status"],
+    "fields": {
+      "id":       { "label": "ID",       "kind": "text", "required": true, "unique": true },
+      "module":   { "label": "Module",   "kind": "text", "required": true, "hint": "Keys to modules.path" },
+      "polarity": { "label": "Polarity", "kind": "enum", "options": ["positive", "negative", "neutral"], "required": true },
+      "judgment": { "label": "Judgment", "kind": "enum", "options": ["deep", "shallow-wrapper", "interface-leak", "missing-seam", "low-leverage", "poor-locality"], "required": true },
+      "severity": { "label": "Severity", "kind": "enum", "options": ["blocking", "worth-exploring", "speculative"], "hint": "Negative findings only" },
+      "reason":   { "label": "Reason",   "kind": "text", "required": true },
+      "status":   { "label": "Status",   "kind": "enum", "options": ["open", "accepted", "resolved", "recheck"], "hint": "accepted = agreed and worth preserving" }
+    }
+  }
+}

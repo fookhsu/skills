@@ -2,7 +2,10 @@
 
 A monorepo of [Pi](https://pi.dev/) agent skills, available from GitHub and npm. Packages here extend Pi with reusable, installable capabilities.
 
-The current package is **codebase-lens**, for reading unfamiliar codebases with evidence: it builds a resumable investigation map, traces behavior through modules, records domain concepts separately, analyzes change impact, and renders a self-contained HTML architecture and flow report with linked source symbols and bounded reading budgets.
+Two packages ship today:
+
+- **codebase-lens** — reading unfamiliar codebases with evidence: a resumable investigation map, behavior traced through modules, domain concepts kept separate, change impact, and a self-contained HTML architecture and flow report with linked source symbols and bounded reading budgets.
+- **knowledge-artifacts** — documents that outlive the conversation that produced them: a gate that decides whether an artifact is warranted at all, frozen prose around marked seams, a contract per seam, a resume checkpoint and provenance, and a domain-agnostic patch tool.
 
 Each directory under `packages/` is a standalone skill package. Packages share one repository, validation script, and documentation conventions.
 
@@ -18,6 +21,7 @@ Or install a single package from npm:
 
 ```bash
 pi install npm:codebase-lens
+pi install npm:knowledge-artifacts
 ```
 
 Add `-l` to write the install to project settings (`.pi/settings.json`) instead of user settings. To remove an install later:
@@ -25,6 +29,7 @@ Add `-l` to write the install to project settings (`.pi/settings.json`) instead 
 ```bash
 pi remove git:github.com/fookhsu/skills
 pi remove npm:codebase-lens
+pi remove npm:knowledge-artifacts
 ```
 
 ## Use with your agent
@@ -33,24 +38,26 @@ Every skill here is a standard `SKILL.md`, so it runs on any agent that implemen
 
 | Agent | Skills directory | Invoke |
 |---|---|---|
-| Pi | `~/.pi/agent/skills/`, or `pi install` | `/skill:codebase-lens` |
-| Claude Code | `~/.claude/skills/` or `<project>/.claude/skills/` | `/codebase-lens` |
-| Codex CLI | `~/.agents/skills/` or `<project>/.agents/skills/` | `$codebase-lens`, or just ask |
+| Pi | `~/.pi/agent/skills/`, or `pi install` | `/skill:codebase-lens`, `/skill:knowledge-artifacts` |
+| Claude Code | `~/.claude/skills/` or `<project>/.claude/skills/` | `/codebase-lens`, `/knowledge-artifacts` |
+| Codex CLI | `~/.agents/skills/` or `<project>/.agents/skills/` | `$codebase-lens`, `$knowledge-artifacts`, or just ask |
 | Cursor, Gemini CLI, GitHub Copilot, Cline, Windsurf, OpenCode | that agent's skills directory | agent-specific |
 
 Install with one command, or copy the skill directory yourself:
 
 ```bash
 node scripts/install-skill.mjs codebase-lens                   # Claude Code + Codex + Pi
+node scripts/install-skill.mjs knowledge-artifacts             # same, for the artifact skill
 node scripts/install-skill.mjs codebase-lens --agent claude
-node scripts/install-skill.mjs codebase-lens --scope project
+node scripts/install-skill.mjs knowledge-artifacts --scope project
 ```
 
 ```bash
 cp -r packages/codebase-lens/skills/codebase-lens ~/.claude/skills/
+cp -r packages/knowledge-artifacts/skills/knowledge-artifacts ~/.claude/skills/
 ```
 
-Describe the task in ordinary language; the skill infers how to investigate it. See the [codebase-lens README](./packages/codebase-lens/README.md) for precise usage and output behavior.
+Describe the task in ordinary language; each skill infers how to proceed. See the [codebase-lens README](./packages/codebase-lens/README.md) for codebase reading and the [knowledge-artifacts README](./packages/knowledge-artifacts/README.md) for artifact generation, seams, and the patch protocol.
 
 <details>
 <summary><strong>Usage examples</strong></summary>
@@ -61,6 +68,12 @@ Describe the task in ordinary language; the skill infers how to investigate it. 
 /skill:codebase-lens What could break if Run.status gains a new value?
 ```
 
+```text
+/skill:knowledge-artifacts Turn this into a plan I can review visually and cut the rules I will keep tuning into their own seam.
+/skill:knowledge-artifacts Analyze data/churn.csv and record the outliers I excluded as decisions that survive a re-run.
+/skill:knowledge-artifacts Read the checkpoint in docs/plan.html and tell me what is next.
+```
+
 </details>
 
 ## Packages
@@ -68,19 +81,30 @@ Describe the task in ordinary language; the skill infers how to investigate it. 
 | Package | Description | Install | Invoke |
 |---|---|---|---|
 | [`codebase-lens`](./packages/codebase-lens) | Resumable, evidence-backed codebase reading with read/unread maps, separate domain concepts, linked source symbols, bounded slices, HTML reports, impact analysis, and opt-in demos. | `pi install npm:codebase-lens` or [GitHub](#install) | `/skill:codebase-lens` |
+| [`knowledge-artifacts`](./packages/knowledge-artifacts) | Artifacts that survive revision and session boundaries: a six-question gate, frozen prose around marked seams, a contract per seam, resume checkpoint, provenance, a patch/migrate tool, and pluggable domain adapters. | `pi install npm:knowledge-artifacts` or [GitHub](#install) | `/skill:knowledge-artifacts` |
 
 ## Repository structure
 
 ```text
 skills/
 ├── packages/
-│   └── codebase-lens/
+│   ├── codebase-lens/
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   └── skills/
+│   │       └── codebase-lens/
+│   │           ├── SKILL.md
+│   │           └── references/
+│   └── knowledge-artifacts/
 │       ├── package.json
 │       ├── README.md
 │       └── skills/
-│           └── codebase-lens/
+│           └── knowledge-artifacts/
 │               ├── SKILL.md
-│               └── references/
+│               ├── ADAPTERS.md
+│               ├── MICRO-APP.md
+│               ├── adapters/
+│               └── scripts/
 ├── scripts/
 │   ├── install-skill.mjs
 │   └── validate-packages.mjs

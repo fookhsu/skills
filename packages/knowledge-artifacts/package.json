@@ -1,0 +1,42 @@
+{
+  "name": "knowledge-artifacts",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Build knowledge artifacts that survive revision and session boundaries — plans, specs, repo or data analyses, reports — with declarative seams, a checkpoint, provenance, and a domain-agnostic patch tool.",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-skill",
+    "agent-skill",
+    "ai-agent",
+    "ai-coding",
+    "coding-agent",
+    "knowledge-artifact",
+    "artifact",
+    "planning",
+    "spec",
+    "report",
+    "documentation",
+    "provenance",
+    "context-engineering",
+    "developer-tools"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fookhsu/skills.git",
+    "directory": "packages/knowledge-artifacts"
+  },
+  "homepage": "https://github.com/fookhsu/skills/tree/main/packages/knowledge-artifacts#readme",
+  "bugs": {
+    "url": "https://github.com/fookhsu/skills/issues"
+  },
+  "files": [
+    "skills/"
+  ],
+  "pi": {
+    "skills": [
+      "./skills"
+    ]
+  }
+}

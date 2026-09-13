@@ -1,0 +1,24 @@
+{
+  "result": {
+    "title": "Result metrics",
+    "itemLabel": "metric",
+    "order": ["metric", "value", "unit", "window"],
+    "fields": {
+      "metric": { "label": "Metric", "kind": "text", "required": true, "unique": true },
+      "value":  { "label": "Value",  "kind": "number", "required": true },
+      "unit":   { "label": "Unit",   "kind": "text" },
+      "window": { "label": "Window", "kind": "text", "hint": "e.g. 2026-02, or last 30 days" }
+    }
+  },
+  "decisions": {
+    "title": "Human decisions",
+    "itemLabel": "decision",
+    "order": ["id", "target", "judgment", "reason"],
+    "fields": {
+      "id":       { "label": "ID",       "kind": "text", "required": true, "unique": true },
+      "target":   { "label": "Target",   "kind": "text", "required": true, "hint": "An outlier, metric, or time window" },
+      "judgment": { "label": "Judgment", "kind": "enum", "options": ["exclude", "keep", "recheck"], "required": true },
+      "reason":   { "label": "Reason",   "kind": "text", "required": true }
+    }
+  }
+}

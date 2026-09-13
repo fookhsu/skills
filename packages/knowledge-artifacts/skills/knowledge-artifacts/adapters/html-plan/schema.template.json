@@ -1,0 +1,14 @@
+{
+  "title": "Rendering rules",
+  "itemLabel": "rule",
+  "order": ["match", "type", "chart", "aggregate", "maxCategories", "colorBy", "notes"],
+  "fields": {
+    "match":         { "label": "Match condition", "kind": "text", "required": true, "unique": true, "hint": "First match wins, in order" },
+    "type":          { "label": "Semantic type", "kind": "enum", "options": ["temporal", "numeric-currency", "categorical", "categorical-highcard", "text", "boolean", "numeric-continuous", "numeric-pair", "geo"] },
+    "chart":         { "label": "Chart",     "kind": "enum", "options": ["line", "bar", "donut", "histogram", "scatter", "kpi", "map", "table"] },
+    "aggregate":     { "label": "Aggregate", "kind": "enum", "options": ["none", "sum", "avg", "count", "min", "max"] },
+    "maxCategories": { "label": "Max categories", "kind": "int", "min": 0, "default": 0, "hint": "0 = unlimited" },
+    "colorBy":       { "label": "Color by",  "kind": "enum", "options": ["none", "category", "value"] },
+    "notes":         { "label": "Notes",     "kind": "text", "hint": "Degradation behavior lives here" }
+  }
+}
