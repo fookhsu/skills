@@ -34,5 +34,8 @@
     "skills": [
       "./packages/*/skills"
     ]
+  },
+  "devDependencies": {
+    "yaml": "^2.9.1"
   }
 }

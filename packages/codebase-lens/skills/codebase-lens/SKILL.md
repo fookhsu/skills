@@ -1,6 +1,6 @@
 ---
 name: codebase-lens
-description: Evidence-backed codebase reading: a resumable investigation map, read/unread coverage, separate domain concepts, linked source symbols, architecture and flow maps, impact analysis, and a self-contained HTML report.
+description: "Evidence-backed codebase reading: a resumable investigation map, read/unread coverage, separate domain concepts, linked source symbols, architecture and flow maps, impact analysis, and a self-contained HTML report."
 license: MIT
 disable-model-invocation: true
 ---
