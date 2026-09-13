@@ -57,7 +57,7 @@ Arguments are a natural-language control contract appended to the invocation —
 
 `DRAFT` is the default checkpoint: the investigation records its findings in `report-draft.md`, then stops and asks whether to render the HTML report. HTML is rendered only on `stop-after=REPORT` or an affirmative answer to that prompt; it is never rendered silently.
 
-Read [references/INVESTIGATION-MAP.md](references/INVESTIGATION-MAP.md) and [references/CODE-READING.md](references/CODE-READING.md) before reconnaissance. Read [references/DOMAIN-CONCEPTS.md](references/DOMAIN-CONCEPTS.md) before recording project terminology. Read [references/ARCHITECTURE.md](references/ARCHITECTURE.md) before drawing or evaluating modules. Read [references/HTML-REPORT.md](references/HTML-REPORT.md) before choosing an artifact workspace, writing a report draft, or rendering a report. Read [references/DEMO.md](references/DEMO.md) only after the user requests or accepts a demo proposal.
+Read [references/INVESTIGATION-MAP.md](references/INVESTIGATION-MAP.md) and [references/CODE-READING.md](references/CODE-READING.md) before reconnaissance. Read [references/DOMAIN-CONCEPTS.md](references/DOMAIN-CONCEPTS.md) before recording project terminology. Read [references/ARCHITECTURE.md](references/ARCHITECTURE.md) before drawing or evaluating modules. Read [references/HTML-REPORT.md](references/HTML-REPORT.md) before choosing an artifact workspace or rendering a report, and [references/REPORT-DRAFT.md](references/REPORT-DRAFT.md) before writing a report draft. Read [references/DEMO.md](references/DEMO.md) only after the user requests or accepts a demo proposal.
 
 ## Artifacts
 
@@ -154,7 +154,7 @@ Set the map stage to `VERIFY` and active lens to `evidence`. A blocked, skipped,
 
 ### 7. Write the report draft
 
-Write `report-draft.md` following the draft contract in [references/HTML-REPORT.md](references/HTML-REPORT.md): front-matter carrying the mode, lens, and primary-visual intent, then the content sections the selected mode requires — direct answer, coverage summary, primary-visual spec, relationship evidence, module details, domain summary, reading path or checks, and unknowns/frontier. Store diagrams as a spec (a fenced Mermaid source block or a compact structured list), never as rendered HTML or SVG. Use verified source links and a compact vocabulary summary linked to `domain-concepts.md`.
+Write `report-draft.md` following the draft contract in [references/REPORT-DRAFT.md](references/REPORT-DRAFT.md): front-matter carrying the mode, lens, and primary-visual intent, then the content sections the selected mode requires — direct answer, coverage summary, primary-visual spec, relationship evidence, module details, domain summary, reading path or checks, and unknowns/frontier. Store diagrams as a spec (a fenced Mermaid source block or a compact structured list), never as rendered HTML or SVG. Use verified source links and a compact vocabulary summary linked to `domain-concepts.md`.
 
 Set the map stage to `DRAFT` and update the map's report links. Then stop and return the direct answer, important unknowns, coverage status, and absolute paths, and explicitly offer to render the HTML report. For response-only, skip the draft and confirm no files were created, returning compact position and coverage in chat.
 

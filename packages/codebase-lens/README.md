@@ -154,7 +154,8 @@ skills/codebase-lens/          # agent-facing skill root
     ├── DEMO.md
     ├── DOMAIN-CONCEPTS.md
     ├── HTML-REPORT.md
-    └── INVESTIGATION-MAP.md
+    ├── INVESTIGATION-MAP.md
+    └── REPORT-DRAFT.md
 ```
 
 </details>
